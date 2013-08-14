@@ -1,12 +1,12 @@
 #include "mcu_config.h"
 
 
-void Int0Interrupt(void)
+void ExterInterrupt(void)
 {
-	IT0 = 1;	// 外部中断0下降沿中断
-	EX0 = 1;	// 外部中断0允许
-//	IT1 = 1;	// 外部中断1下降沿中断
-//	EX1 = 1;	// 外部中断1允许
+//	IT0 = 1;	// 外部中断0下降沿中断
+//	EX0 = 1;	// 外部中断0允许
+	IT1 = 1;	// 外部中断1下降沿中断
+	EX1 = 1;	// 外部中断1允许
 }
 
 void SpiInit(void)
@@ -27,7 +27,14 @@ void CpuInit(void)
 	
     SpiInit();
     delay(50000);
-	Int0Interrupt();
+    delay(50000);
+		LED_D4 = ~LED_D4;
+	 	delay(50000);
+	  delay(50000);
+		LED_D4 = ~LED_D4; 
+	 	delay(50000);
+	  delay(50000);
+		LED_D4 = ~LED_D4; 
 }
 
 

@@ -13,16 +13,19 @@ sbit    MOSI    =   P0^0;
 sbit    SCK     =   P0^1;   
 sbit    MISO    =   P0^2;
 sbit    GDO2    =   P0^3;   
-//sbit    GDO0    =   P0^4;                               //0
-sbit    CSN     =   P3^3;
+sbit    GDO0    =   P3^3;						// INT1外部中断INT1 低电平触发
+sbit    CSN     =   P0^4;
 
 // 此处需要将GDO0管脚连接到外部中断上，并配置为低电平中断。
-sbit	GDO0	=	P3^2;		// INT0
+//sbit	GDO0	=	P3^2;		// INT0
 
 //sbit    LED_R   =   P1^7;
 
 sbit LED_R  =   P3^7;
-sbit LED_B0 =   P2^0;
+sbit LED_D1 =   P2^0;
+sbit LED_D2	=	P2^1;
+sbit LED_D3 =   P2^2;
+sbit LED_D4	=	P2^3;
 
 extern INT8U _1s_counter,leng,count; 
 extern INT8U flag_rx;
@@ -30,6 +33,7 @@ extern INT8U flag_rx;
 extern INT8U TxBuf[64];	 			// 11字节, 如果需要更长的数据包,请正确设置
 extern INT8U RxBuf[64];
 
+void ExterInterrupt();
 void SpiInit(void);
 void CpuInit(void);
 INT8U SpiTxRxByte(INT8U dat);

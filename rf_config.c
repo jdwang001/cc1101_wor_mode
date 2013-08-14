@@ -357,7 +357,7 @@ INT8U CC1101_Worwakeup(INT8U *rxBuffer, INT8U *length)
 		halSpiStrobe(CCxxx0_SFRX); 
 		halSpiStrobe(CCxxx0_SWORRST);      //复位到 事件1
 		halSpiStrobe(CCxxx0_SWOR);         //启动WOR	
-      	return 0;
+    return 0;
     }
 }
  
@@ -365,7 +365,6 @@ INT8U CC1101_Worwakeup(INT8U *rxBuffer, INT8U *length)
 INT8U CC1101_Setwor(void)
 {
  	halSpiStrobe(CCxxx0_SIDLE); //空闲模式
-  // 设置接收超时 Rx_timeout =2.596 ms.
   // MCSM2.RX_TIME = 001b
   //	Rx_timeout = （10400*3.6058）us = 37.5ms
   // => Rx_timeout = (EVENT0*C(RX_TIME, WOR_RES))*26/x   x晶振频率
@@ -403,9 +402,11 @@ INT8U CC1101_Setwor(void)
   return 1;
 }
 
-void Rf_wakeup() interrupt	0
+void Rf_wakeup() interrupt	2
 {
-	 LED_B0 = ~LED_B0; 
+	 //PCON &= PD_OFF; 
+	 LED_D1 = ~LED_D1; 
+	 // Log_printf("Enter INT2\n");
 	 CC1101_Worwakeup(RxBuf,&leng);
 }
 

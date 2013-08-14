@@ -6,6 +6,7 @@
 ** 2012-09-14
 */
 
+
 //#include <reg52.h>
 
 #include "rf_config.h"
@@ -98,29 +99,48 @@ void main()
     //CLK_DIV|=0x03;
     INT8U i,s_count=0;;
     leng =11; // Ô¤¼Æ½ÓÊÕ 11 bytes 
-    UART_init();
+
     CpuInit();
     POWER_UP_RESET_CC1100();
     halRfWriteRfSettings();
     halSpiWriteBurstReg(CCxxx0_PATABLE, PaTabel, 8);
-    //CC1101_InitWOR(300);
-	CC1101_Setwor();
-   	//Log_printf("Test wor\n");
+		CC1101_Setwor();
+		
+		UART_init();		
+		delay(50000);
+		delay(50000);
+		delay(50000);
+		delay(50000);
+		delay(50000);
+
+
+   	Log_printf("initialization ok\n");
+	ExterInterrupt();		
     GucCount = 0;
     while (1)
     {
-    		
-        if ( flag_rx == 0x55 )
-        {
-        	flag_rx = 0;
-			//Usart_printf(&count,1);
-			//Usart_printf(TxBuf,count);
+    	PCON |= PD_ON;	
+//        if ( flag_rx == 0x55 )
+//        {
+//        	flag_rx = 0;
+//			//Usart_printf(&count,1);
+//			//Usart_printf(TxBuf,count);
+//
+//            halRfSendPacket(TxBuf,count);	// Transmit Tx buffer data
+//            LED_R=~LED_R;
+//            count = 0;
+//        }
 
-            halRfSendPacket(TxBuf,count);	// Transmit Tx buffer data
-            LED_R=~LED_R;
-            count = 0;
-        }
-		PCON |= PD_ON; 
+		
+//		
+//		GDO0 = 1;
+//		while(!GDO0);
+//		_nop_();
+//		_nop_();
+//		Log_printf("PCON ok\n");
+//		PCON |= PD_ON; 
+//		_nop_();
+//		_nop_();
         
         /*
         if (GucCount++ > 1000)
