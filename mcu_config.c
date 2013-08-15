@@ -42,6 +42,7 @@ void SpiInit(void)
 void CpuInit(void)
 {	 
 	
+    LED_R = ~LED_R;
     SpiInit();
     delay(50000);
     delay(50000);

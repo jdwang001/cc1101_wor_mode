@@ -98,6 +98,9 @@
 #define CCxxx0_TXFIFO       0x3F
 #define CCxxx0_RXFIFO       0x3F
 
+#define	BROADCAST						0xFF				// wor广播命令
+
+
 // RF_SETTINGS is a data structure which contains all relevant CCxxx0 registers
 // 定义了35个寄存器
 typedef struct S_RF_SETTINGS
@@ -156,8 +159,10 @@ void halRfWriteRfSettings(void);
 void halRfSendPacket(INT8U *txBuffer, INT8U size);
 INT8U halRfReceivePacket(INT8U *rxBuffer, INT8U *length);
 INT8U halRfWorwakeup(INT8U *rxBuffer, INT8U *length);
-INT8U CC1101_Worwakeup(INT8U *rxBuffer, INT8U *length);
+//INT8U CC1101_Worwakeup(INT8U *rxBuffer, INT8U *length);
+INT8U CC1101_Worwakeup(void);
 INT8U CC1101_InitWOR(INT32U Time);
 INT8U CC1101_Setwor(void);
 void Rf_wakeup();
+void CC1101_Wakeupcarry(INT8U ms);
 #endif

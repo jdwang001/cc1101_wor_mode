@@ -8,7 +8,8 @@
 #include "rf_config.h"
 
 //INT16U GucCount;
-INT8U g_1s_counter=0,g_leng=0,g_count = 0; 
+INT16U g_module_id = 0;
+INT8U g_1s_counter=0,g_leng=0,g_count = 0,g_test_count=0;
 INT8U g_wor_flag = 0x00,g_rx_flag = 0;
 INT8U TxBuf[64];	 			// 11字节, 如果需要更长的数据包,请正确设置
 INT8U RxBuf[64];
@@ -16,6 +17,7 @@ INT8U RxBuf[64];
 //INT8U PaTabel[8] = {0x04 ,0x04 ,0x04 ,0x04 ,0x04 ,0x04 ,0x04 ,0x04};  //-30dBm   功率最小
 //INT8U PaTabel[8] = {0x60 ,0x60 ,0x60 ,0x60 ,0x60 ,0x60 ,0x60 ,0x60};  //0dBm
 INT8U PaTabel[8] = {0xC0 ,0xC0 ,0xC0 ,0xC0 ,0xC0 ,0xC0 ,0xC0 ,0xC0};
+
 const RF_SETTINGS rfSettings = 
 {
     		0x00,		
@@ -94,32 +96,21 @@ void main()
 
     while (1)
     {
+    	//Log_printf("Enter pd\n");
+			PCON |= PD_ON;
+						
+//			while ( g_rx_flag == 0x55 )
+//			{
+//				//g_rx_flag = 0x00;
+//				
+//				halRfReceivePacket(RxBuf,&g_leng);
+//				//halRfSendPacket(TxBuf,count);	// Transmit Tx buffer data
+//				LED_R=~LED_R;
+//				//count = 0;
+//			}
 			
-			//INT1_ON;
-	 		PCON |= PD_ON;
-			
-//        if ( g_rx_flag == 0x55 )
-//        {
-//        	g_rx_flag = 0;
-//			//Usart_printf(&count,1);
-//			//Usart_printf(TxBuf,count);
-//
-//            halRfSendPacket(TxBuf,count);	// Transmit Tx buffer data
-//            LED_R=~LED_R;
-//            count = 0;
-//        }
 
-		
-//		
-//		GDO0 = 1;
-//		while(!GDO0);
-//		_nop_();
-//		_nop_();
-//		Log_printf("PCON ok\n");
-//		PCON |= PD_ON; 
-//		_nop_();
-//		_nop_();
-        
+
         /*
         if (GucCount++ > 1000)
         {
