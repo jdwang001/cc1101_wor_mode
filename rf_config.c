@@ -1,11 +1,19 @@
+// Filename:	mcu_config.c
+// Function:	rf底层驱动
+// Author:		wzd
+// Date:			2013年8月15日10:21:25
+
+
 #include "rf_config.h"
 
-
+/*****************************************************************************************
+//函数名：void halWait(INT16U timeout) 
+//输入：无
+//输出：无
+//功能描述：rf操作中的延时函数
+/*****************************************************************************************/
 void halWait(INT16U timeout) 
 {
-    //unsigned int i;
-    //for(i=0;i<2;i++)
-    //{	
     do 
     {
         _nop_();
@@ -25,9 +33,7 @@ void halWait(INT16U timeout)
         _nop_(); 
     } 
     while (--timeout);
-    //}
 }
-
 
 //*****************************************************************************************
 //函数名：void RESET_CC1100(void)
@@ -110,10 +116,6 @@ void halSpiStrobe(INT8U strobe)
     CSN = 1;
 }
 
-
-
-
-
 //*****************************************************************************************
 //函数名：INT8U halSpiReadReg(INT8U addr)
 //输入：地址
@@ -131,7 +133,6 @@ INT8U halSpiReadReg(INT8U addr)
     CSN = 1;
     return value;
 }
-
 
 //*****************************************************************************************
 //函数名：void halSpiReadBurstReg(INT8U addr, INT8U *buffer, INT8U count)
@@ -153,7 +154,6 @@ void halSpiReadBurstReg(INT8U addr, INT8U *buffer, INT8U count)
     CSN = 1;
 }
 
-
 //*****************************************************************************************
 //函数名：INT8U halSpiReadReg(INT8U addr)
 //输入：地址
@@ -171,6 +171,7 @@ INT8U halSpiReadStatus(INT8U addr)
     CSN = 1;
     return value;
 }
+
 //*****************************************************************************************
 //函数名：void halRfWriteRfSettings(RF_SETTINGS *pRfSettings)
 //输入：无
@@ -179,6 +180,8 @@ INT8U halSpiReadStatus(INT8U addr)
 //*****************************************************************************************
 void halRfWriteRfSettings(void) 
 {
+    halSpiWriteReg(CCxxx0_IOCFG2,   rfSettings.IOCFG2);
+    halSpiWriteReg(CCxxx0_IOCFG0,   rfSettings.IOCFG0); 
     
     halSpiWriteReg(CCxxx0_FSCTRL0,  rfSettings.FSCTRL2);//自已加的
     // Write register settings
@@ -210,8 +213,7 @@ void halRfWriteRfSettings(void)
     halSpiWriteReg(CCxxx0_TEST2,    rfSettings.TEST2);
     halSpiWriteReg(CCxxx0_TEST1,    rfSettings.TEST1);
     halSpiWriteReg(CCxxx0_TEST0,    rfSettings.TEST0);
-    halSpiWriteReg(CCxxx0_IOCFG2,   rfSettings.IOCFG2);
-    halSpiWriteReg(CCxxx0_IOCFG0,   rfSettings.IOCFG0);    
+   
     halSpiWriteReg(CCxxx0_PKTCTRL1, rfSettings.PKTCTRL1);
     halSpiWriteReg(CCxxx0_PKTCTRL0, rfSettings.PKTCTRL0);
     halSpiWriteReg(CCxxx0_ADDR,     rfSettings.ADDR);
@@ -222,11 +224,12 @@ void halRfWriteRfSettings(void)
 //函数名：void halRfSendPacket(INT8U *txBuffer, INT8U size)
 //输入：发送的缓冲区，发送数据个数
 //输出：无
-//功能描述：CC1100发送一组数据
+//功能描述：CC1101发送一组数据
 //*****************************************************************************************
-
 void halRfSendPacket(INT8U *txBuffer, INT8U size) 
 {
+		// 配置了IOCFG0.GDO0_CFG=0x06 发送/接收到同步字时置位，并在数据包的末尾取消置位
+		INT1_OFF;
 		// 首次初始化，开启可变数据包长度，长度字节被首先写入，没有开启地址识别，第二个字节无需写入ADR
     halSpiWriteReg(CCxxx0_TXFIFO, size);
     halSpiWriteBurstReg(CCxxx0_TXFIFO, txBuffer, size);	//写入要发送的数据
@@ -239,9 +242,15 @@ void halRfSendPacket(INT8U *txBuffer, INT8U size)
     while (GDO0);
     // 发送指令，清除TX_FIFO
     halSpiStrobe(CCxxx0_SFTX);
+    INT1_ON;
 }
 
-
+//*****************************************************************************************
+//函数名：INT8U halRfReceivePacket(INT8U *rxBuffer, INT8U *length) 
+//输入：INT8U *rxBuffer 无线接收数据，INT8U *length 接收字节数
+//输出：返回接收到的字节数
+//功能描述：CC1101将接收到的无线数据存储到*rxBuffer指向的数组中
+//*****************************************************************************************
 INT8U halRfReceivePacket(INT8U *rxBuffer, INT8U *length) 
 {
     INT8U status[2];
@@ -290,49 +299,41 @@ INT8U halRfReceivePacket(INT8U *rxBuffer, INT8U *length)
         return 0;
 }
 
+//*****************************************************************************************
+//函数名：INT8U CC1101_Worwakeup(INT8U *rxBuffer, INT8U *length)  
+//输入：INT8U *rxBuffer 无线接收数据，INT8U *length 接收字节数
+//输出：返回接收到的字节数
+//功能描述：CC1101将接收到的无线数据存储到*rxBuffer指向的数组中
+//*****************************************************************************************
 INT8U CC1101_Worwakeup(INT8U *rxBuffer, INT8U *length) 
 {
     INT8U status[2];
     INT8U packetLength;
     INT8U i=(*length)*4;  // 具体多少要根据datarate和length来决定
-    
 
-    //delay(5);
-    //while (!GDO1);
-    //while (GDO1);
-    //delay(20);
-//    while (GDO0)
-//    {
-//        delay(20);
-//        --i;
-//        if(i<1)
-//            return 0; 	    
-//    }	 
     // 检测到数据包后，进入接收模式
     halSpiStrobe(CCxxx0_SRX);
     // CCxxx0_RXBYTES RX_FIFO的字节数
     if ((halSpiReadStatus(CCxxx0_RXBYTES) & BYTES_IN_RXFIFO)) //如果接的字节数不为0
     {
         	packetLength = halSpiReadReg(CCxxx0_RXFIFO);//读出第一个字节，此字节为该帧数据长度
-				Usart_printf(&packetLength,1);
+					Usart_printf(&packetLength,1);
 				
-//				if(packetLength == 2)
-//				{
-//					
-//					return 1;
-//					//halRFReceiveData(rxBuffer,length);
-//				}
-//				else				
-//        if (packetLength <= *length) 		//如果所要的有效数据长度小于等于接收到的数据包的长度
-//        {
-//            halSpiReadBurstReg(CCxxx0_RXFIFO, rxBuffer, packetLength); //读出所有接收到的数据
-//            *length = packetLength;				//把接收数据长度的修改为当前数据的长度
-//            
+	        if (packetLength <= *length) 		//如果所要的有效数据长度小于等于接收到的数据包的长度
+	        {
+	            halSpiReadBurstReg(CCxxx0_RXFIFO, rxBuffer, packetLength); //读出所有接收到的数据
+	            *length = packetLength;				//把接收数据长度的修改为当前数据的长度
+            
+							if(packetLength == 2)
+							{
+								Usart_printf(rxBuffer,2);
+							}
+            
             // Read the 2 appended status bytes (status[0] = RSSI, status[1] = LQI)
             halSpiReadBurstReg(CCxxx0_RXFIFO, status, 2); 	//读出CRC校验位
             halSpiStrobe(CCxxx0_SFRX);		//清洗接收缓冲区
            	halSpiStrobe(CCxxx0_SWORRST);      //复位到 事件1
-			halSpiStrobe(CCxxx0_SWOR);         //启动WOR	
+						halSpiStrobe(CCxxx0_SWOR);         //启动WOR	
 	          return (status[1] & CRC_OK);			//如果校验成功返回接收成功
 //            if(status[1] & CRC_OK)
 //            {
@@ -342,26 +343,31 @@ INT8U CC1101_Worwakeup(INT8U *rxBuffer, INT8U *length)
 //            {
 //            	return 0;
 //          	}
-//        }
-//        else 
-//        {
-//            *length = packetLength;
-//            halSpiStrobe(CCxxx0_SFRX);					//清洗接收缓冲区
-//            halSpiStrobe(CCxxx0_SWORRST);      //复位到 事件1
-//						halSpiStrobe(CCxxx0_SWOR);         //启动WOR	
-//            return 0;
-//        }
+        	}
+	        else 
+	        {
+	            *length = packetLength;
+	            halSpiStrobe(CCxxx0_SFRX);					//清洗接收缓冲区
+	            halSpiStrobe(CCxxx0_SWORRST);      //复位到 事件1
+							halSpiStrobe(CCxxx0_SWOR);         //启动WOR	
+	            return 0;
+	        }
     } 
     else
     {
-		halSpiStrobe(CCxxx0_SFRX); 
-		halSpiStrobe(CCxxx0_SWORRST);      //复位到 事件1
-		halSpiStrobe(CCxxx0_SWOR);         //启动WOR	
-    return 0;
+			halSpiStrobe(CCxxx0_SFRX); 
+			halSpiStrobe(CCxxx0_SWORRST);      //复位到 事件1
+			halSpiStrobe(CCxxx0_SWOR);         //启动WOR	
+	    return 0;
     }
 }
- 
 
+//*****************************************************************************************
+//函数名：INT8U CC1101_Setwor(void)  
+//输入：无
+//输出：无
+//功能描述：设置rf唤醒模式参数 EVENT0=300ms  rx_timeout=37.5ms
+//***************************************************************************************** 
 INT8U CC1101_Setwor(void)
 {
  	halSpiStrobe(CCxxx0_SIDLE); //空闲模式
@@ -402,15 +408,30 @@ INT8U CC1101_Setwor(void)
   return 1;
 }
 
+//*****************************************************************************************
+//函数名：void Rf_wakeup() interrupt	2 
+//输入：无
+//输出：无
+//功能描述：唤醒后，关闭PD，置位wor_flag
+//***************************************************************************************** 
 void Rf_wakeup() interrupt	2
 {
-	 //PCON &= PD_OFF; 
+	 INT1_OFF;
+	 PCON &= PD_OFF; 
 	 LED_D1 = ~LED_D1; 
-	 // Log_printf("Enter INT2\n");
-	 CC1101_Worwakeup(RxBuf,&leng);
+	 //Log_printf("Enter rf_wakeup\n");
+	 CC1101_Worwakeup(RxBuf,&g_leng);
+	 INT1_ON;
+	 //Log_printf("Enter rf_wakeup\n");
+
 }
 
-
+//*****************************************************************************************
+//函数名：INT8U CC1101_InitWOR(INT32U Time) 
+//输入：无
+//输出：无
+//功能描述：唤醒后，关闭PD，置位wor_flag
+//***************************************************************************************** 
 INT8U CC1101_InitWOR(INT32U Time)
 {
   //INT16U T_Event0=60;   //把 EVENT0的时间设定为1S

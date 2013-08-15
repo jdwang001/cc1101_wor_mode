@@ -3,12 +3,12 @@
 
 #include "mcu_config.h"
 
-#define		F_xosc	26000000
-#define 	WRITE_BURST     	0x40						//连续写入
-#define 	READ_SINGLE     	0x80						//读
-#define 	READ_BURST      	0xC0						//连续读
-#define 	BYTES_IN_RXFIFO     0x7F  						//接收缓冲区的有效字节数
-#define 	CRC_OK              0x80 						//CRC校验通过位标志
+#define	F_xosc							26000000		// RF晶振频率
+#define WRITE_BURST     		0x40				// 连续写
+#define READ_SINGLE     		0x80				// 读
+#define READ_BURST      		0xC0				// 连续读
+#define BYTES_IN_RXFIFO     0x7F  			// 接收缓冲区的有效字节数
+#define CRC_OK              0x80 				// CRC校验通过位标志
 #define CCxxx0_IOCFG2       0x00        // GDO2 output pin configuration
 #define CCxxx0_IOCFG1       0x01        // GDO1 output pin configuration
 #define CCxxx0_IOCFG0       0x02        // GDO0 output pin configuration
@@ -139,6 +139,7 @@ typedef struct S_RF_SETTINGS
     INT8U PKTLEN;    // Packet length.
 } RF_SETTINGS;
 
+extern INT8U g_wor_flag;
 extern INT8U PaTabel[8];
 extern const RF_SETTINGS rfSettings;
 

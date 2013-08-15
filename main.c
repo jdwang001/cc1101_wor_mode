@@ -1,26 +1,15 @@
 // Project：capinfo-rf_route
+// Filename:	mcu_config.c
+// Function:	rf底层驱动
+// Author:		wzd
+// Date:			2013年8月15日10:21:25
 
-/*
-** 东方红电子
-** CC1101 433MHz无线模块相互通信，两个节点烧写一样的程序
-** 2012-09-14
-*/
-
-
-//#include <reg52.h>
 
 #include "rf_config.h"
-/*
-sbit 	GDO0	=P1^1;
-sbit 	GDO2	=P1^2;
-sbit	MISO	=P1^3;
-sbit	MOSI	=P1^5;
-sbit	SCK		=P1^4;
-sbit	CSN		=P1^0;
-*/
 
-INT8U _1s_counter,leng,count = 0; 
-INT8U flag_rx = 0;
+//INT16U GucCount;
+INT8U g_1s_counter=0,g_leng=0,g_count = 0; 
+INT8U g_wor_flag = 0x00,g_rx_flag = 0;
 INT8U TxBuf[64];	 			// 11字节, 如果需要更长的数据包,请正确设置
 INT8U RxBuf[64];
 //***************更多功率参数设置可详细参考DATACC1100英文文档中第48-49页的参数表******************
@@ -88,17 +77,10 @@ const RF_SETTINGS rfSettings =
         0x0c    // PKTLEN    Packet length.								可变数据包模式下，可发送的最大最大字节
 };
 
-/////////////////////////////////////////////////////////////////
-/*定义了一个RF_SETTINGS结构体变量 rfSettings*/
-// 对使用的35个寄存器进行赋值
-
-
-INT16U GucCount;
 void main()
 {
-    //CLK_DIV|=0x03;
     INT8U i,s_count=0;;
-    leng =11; // 预计接收 11 bytes 
+    g_leng =11; // 预计接收 11 bytes 
 
     CpuInit();
     POWER_UP_RESET_CC1100();
@@ -106,23 +88,19 @@ void main()
     halSpiWriteBurstReg(CCxxx0_PATABLE, PaTabel, 8);
 		CC1101_Setwor();
 		
-		UART_init();		
-		delay(50000);
-		delay(50000);
-		delay(50000);
-		delay(50000);
-		delay(50000);
-
-
+		UART_init();
    	Log_printf("initialization ok\n");
-	ExterInterrupt();		
-    GucCount = 0;
+   	Int1Init();
+
     while (1)
     {
-    	PCON |= PD_ON;	
-//        if ( flag_rx == 0x55 )
+			
+			//INT1_ON;
+	 		PCON |= PD_ON;
+			
+//        if ( g_rx_flag == 0x55 )
 //        {
-//        	flag_rx = 0;
+//        	g_rx_flag = 0;
 //			//Usart_printf(&count,1);
 //			//Usart_printf(TxBuf,count);
 //
