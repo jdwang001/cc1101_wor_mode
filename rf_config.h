@@ -143,6 +143,7 @@ typedef struct S_RF_SETTINGS
 } RF_SETTINGS;
 
 extern INT8U g_wor_flag;
+extern INT8U WorCarry[2];
 extern INT8U PaTabel[8];
 extern const RF_SETTINGS rfSettings;
 
@@ -164,5 +165,6 @@ INT8U CC1101_Worwakeup(void);
 INT8U CC1101_InitWOR(INT32U Time);
 INT8U CC1101_Setwor(void);
 void Rf_wakeup();
-void CC1101_Wakeupcarry(INT8U ms);
+void CC1101_Wakeupcarry(INT8U *worcarry, INT8U size,INT8U s);
+INT8U CC1101_EnterRx(INT8U *rxBuffer, INT8U *length); 
 #endif

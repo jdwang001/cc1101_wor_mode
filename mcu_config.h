@@ -44,7 +44,7 @@ void UART_init(void);
 void Log_printf(INT8U *p_log);
 void Usart_printf(INT8U *p_uart,INT8U num);
 void delay(unsigned int s);
-void ser();
+void uart_isr();
 INT8U SpiTxRxByte(INT8U dat);
 
 #endif

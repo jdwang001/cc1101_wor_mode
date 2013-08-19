@@ -42,7 +42,7 @@ void SpiInit(void)
 void CpuInit(void)
 {	 
 	
-    LED_R = ~LED_R;
+    //LED_R = ~LED_R;
     SpiInit();
     delay(50000);
     delay(50000);
@@ -118,6 +118,8 @@ void UART_init(void)
     TR1 = 1;                     // Timer 1 run
     
     ET1 =0; 
+    //WAKE_CLKO = 0x40;						 // 使能下降沿唤醒MCU，从掉电模式
+    
     ES=1;												 // 开启串行口中断
     G_IT_ON;										 // 开启单片机全局中断
 }
@@ -182,11 +184,12 @@ void delay(unsigned int s)
 //输出：接收到的串口数据
 //功能描述：中断接收串口数据帧
 //*****************************************************************************************		
-void ser()  interrupt 4   //串口中断
+void uart_isr()  interrupt 4   //串口中断
 {
     if(RI)								// RI为1，向主机请求中断，手动清零
     {
         TxBuf[g_count]=SBUF;
+        
   			if(TxBuf[0]!=0xAA)
 				{
 					g_count = 0;	

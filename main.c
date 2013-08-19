@@ -11,6 +11,7 @@
 INT16U g_module_id = 0;
 INT8U g_1s_counter=0,g_leng=0,g_count = 0,g_test_count=0;
 INT8U g_wor_flag = 0x00,g_rx_flag = 0;
+INT8U	WorCarry[2] = {0xFF,0xFF};
 INT8U TxBuf[64];	 			// 11字节, 如果需要更长的数据包,请正确设置
 INT8U RxBuf[64];
 //***************更多功率参数设置可详细参考DATACC1100英文文档中第48-49页的参数表******************
@@ -81,7 +82,7 @@ const RF_SETTINGS rfSettings =
 
 void main()
 {
-    INT8U i,s_count=0;;
+    INT8U i=0,s_count=0;;
     g_leng =11; // 预计接收 11 bytes 
 
     CpuInit();
@@ -97,19 +98,29 @@ void main()
     while (1)
     {
     	//Log_printf("Enter pd\n");
-			PCON |= PD_ON;
+			PCON |= PD_ON;									// 从掉电模式唤醒后，程序从这行开市
 						
-//			while ( g_rx_flag == 0x55 )
+//			while ( 0x55 == g_rx_flag )
 //			{
-//				//g_rx_flag = 0x00;
-//				
-//				halRfReceivePacket(RxBuf,&g_leng);
+//				//Usart_printf(TxBuf,g_count);				
+//				//halRfReceivePacket(RxBuf,&g_leng);
 //				//halRfSendPacket(TxBuf,count);	// Transmit Tx buffer data
-//				LED_R=~LED_R;
-//				//count = 0;
+//				//CC1101_Wakeupcarry(WorCarry,2,1);
+//				halRfSendPacket(TxBuf,g_count);
+//				LED_D2=~LED_D2;
+//				g_count = 0;
+//				g_rx_flag = 0x00;
+//				Log_printf("Worcarry over\n");
+//
 //			}
 			
-
+			while( 0x55 == g_wor_flag )
+			{
+					g_wor_flag = 0x00;
+					CC1101_EnterRx(RxBuf, 11);
+					INT1_ON;
+				
+			}
 
         /*
         if (GucCount++ > 1000)
