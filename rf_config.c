@@ -317,7 +317,7 @@ INT8U CC1101_EnterRx(INT8U *rxBuffer, INT8U *length)
     INT8U i=(*length)*4;  // 具体多少要根据datarate和length来决定
     
     //Log_printf("Enter rx  ");
-    halSpiStrobe(CCxxx0_SRX);		//进入接收状态
+    //halSpiStrobe(CCxxx0_SRX);		//进入接收状态
     //delay(5);
     //while (!GDO1);
     //while (GDO1);
@@ -336,20 +336,35 @@ INT8U CC1101_EnterRx(INT8U *rxBuffer, INT8U *length)
     // CCxxx0_RXBYTES RX_FIFO的字节数
     while(1)
     {
+    	halSpiStrobe(CCxxx0_SRX);		//进入接收状态
+    	delay(20);
+	    while (GDO0)
+	    {
+	        delay(20);
+	        --i;
+	        if(i<1)
+	        	{
+	        		Log_printf("Enter rx time out  ");
+	            return 0; 	 
+	           }   
+	    }
+	    	
+	    //Log_printf("Enter RX\n");
+	    
 	    if ((halSpiReadStatus(CCxxx0_RXBYTES) & BYTES_IN_RXFIFO)) //如果接的字节数不为0
 	    {
 	        packetLength = halSpiReadReg(CCxxx0_RXFIFO);//读出第一个字节，此字节为该帧数据长度
-		
 					//测试程序
 					Usart_printf(&packetLength,1);
-	
-	        if (packetLength <= *length) 		//如果所要的有效数据长度小于等于接收到的数据包的长度
+	        if (packetLength > 2) 		//如果所要的有效数据长度小于等于接收到的数据包的长度
 	        {
-	        	//Log_printf("rx data  ");
+	        		Log_printf("Enter RX2\n");
 	            halSpiReadBurstReg(CCxxx0_RXFIFO, rxBuffer, packetLength); //读出所有接收到的数据
 	            *length = packetLength;				//把接收数据长度的修改为当前数据的长度
 	            
-	            Usart_printf(&packetLength,1);
+							Usart_printf(rxBuffer,packetLength);
+	            
+	            //Usart_printf(&packetLength,1);
 	            // Read the 2 appended status bytes (status[0] = RSSI, status[1] = LQI)
 	            halSpiReadBurstReg(CCxxx0_RXFIFO, status, 2); 	//读出CRC校验位
 	            halSpiStrobe(CCxxx0_SFRX);		//清洗接收缓冲区
@@ -360,13 +375,13 @@ INT8U CC1101_EnterRx(INT8U *rxBuffer, INT8U *length)
 	        	//Log_printf("length big  ");
 	            *length = packetLength;
 	            halSpiStrobe(CCxxx0_SFRX);		//清洗接收缓冲区
-	            return 0;
+	            //return 0;
 	        }
 	    } 
 	    else
 	    	{
 	    		//Log_printf("packet 0  ");
-	        return 0;
+	        //return 0;
 	      }
 	  }
 }
@@ -397,8 +412,9 @@ INT8U CC1101_Worwakeup(void)
 	        if (packetLength == 2) 																		//如果所要的有效数据长度等于接收到的数据包的长度
 	        {
 	            halSpiReadBurstReg(CCxxx0_RXFIFO, wor_data, packetLength); 	//读出所有接收到的数据
+	            
 	            //*length = packetLength;																		//把接收数据长度的修改为当前数据的长度
-							if ( (wor_data[0]==wor_data[1]==BROADCAST) || (wor_data[0]==g_module_id && wor_data[1]==g_module_id>>8) )
+							if ( (wor_data[0]==BROADCAST && wor_data[1]==BROADCAST) || ( (wor_data[0]==g_module_id) && (wor_data[1]==g_module_id>>8) ) )
 							//if ( (wor_data[0]==0x55 && wor_data[1]==0xAA) || (wor_data[0]==g_module_id && wor_data[1]==g_module_id>>8) )
 							{
 		            // Read the 2 appended status bytes (status[0] = RSSI, status[1] = LQI)
@@ -417,12 +433,14 @@ INT8U CC1101_Worwakeup(void)
 		            }
 		            else
 		            {
+		            	
 		            	Log_printf("CRC error\n");
 		          	}							
 							}
 							else
 							{
-								Log_printf("Not me\n");	
+								Usart_printf(wor_data,2);
+								Log_printf("  why Not me\n");	
 							}
         	}
 	        else 

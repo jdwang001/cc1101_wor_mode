@@ -114,11 +114,15 @@ void main()
 //
 //			}
 			
+//			Usart_printf(&g_wor_flag,1);
+//			Log_printf("Exit pd\n");
 			while( 0x55 == g_wor_flag )
 			{
 					g_wor_flag = 0x00;
+					Log_printf("Exit pd\n");
 					CC1101_EnterRx(RxBuf, 11);
 					INT1_ON;
+					进入wor模式
 				
 			}
 
