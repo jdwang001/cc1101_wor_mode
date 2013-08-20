@@ -10,7 +10,7 @@
 //INT16U GucCount;
 INT16U g_module_id = 0;
 INT8U g_1s_counter=0,g_leng=0,g_count = 0,g_test_count=0;
-INT8U g_wor_flag = 0x00,g_rx_flag = 0;
+INT8U g_wor_flag = 0x00,g_rx_flag = 0,g_rf_rx_flag = 0;
 INT8U	WorCarry[2] = {0xFF,0xFF};
 INT8U TxBuf[64];	 			// 11字节, 如果需要更长的数据包,请正确设置
 INT8U RxBuf[64];
@@ -77,13 +77,13 @@ const RF_SETTINGS rfSettings =
         0x04,   // PKTCTRL1  Packet automation control.		APPEND_STATUS=1增加两个状态字节以及CRC_OK标记增加在数据包有效负载上 ADR_CHK=00无地址校验
         0x05,   // PKTCTRL0  Packet automation control.		NU=0 WHITE_DATA=1关闭数据白化 PKT_FORMAT=00(use FIFOs for RX and TX) NU=0 CRC_EN=1 LENGTH_CONFIG=01可变长度包模式
         0x00,   // ADDR      Device address.
-        0x0c    // PKTLEN    Packet length.								可变数据包模式下，可发送的最大最大字节
+        0xFF    // PKTLEN    Packet length.								可变数据包模式下，可发送的最大最大字节 定义为最大
 };
 
 void main()
 {
     INT8U i=0,s_count=0;;
-    g_leng =11; // 预计接收 11 bytes 
+    g_leng =55;  
 
     CpuInit();
     POWER_UP_RESET_CC1100();
@@ -97,7 +97,8 @@ void main()
 
     while (1)
     {
-    	//Log_printf("Enter pd\n");
+    	//Log_printf("first pd\n");
+    	INT1_ON;
 			PCON |= PD_ON;									// 从掉电模式唤醒后，程序从这行开市
 						
 //			while ( 0x55 == g_rx_flag )
@@ -116,15 +117,36 @@ void main()
 			
 //			Usart_printf(&g_wor_flag,1);
 //			Log_printf("Exit pd\n");
+
+			
+
+
 			while( 0x55 == g_wor_flag )
 			{
 					g_wor_flag = 0x00;
-					Log_printf("Exit pd\n");
-					CC1101_EnterRx(RxBuf, 11);
-					INT1_ON;
-					进入wor模式
-				
+					CC1101_Worwakeup();
+					while( 0x55 == g_rf_rx_flag )
+					{
+						//g_rf_rx_flag = 0x00;
+						//halRfReceivePacket(RxBuf,&g_leng);
+						CC1101_EnterRx(RxBuf,&g_leng);
+					}
 			}
+
+					
+
+					
+					//CC1101_EnterRx(RxBuf, 11);
+					halSpiStrobe(CCxxx0_SWORRST);      //复位到 事件1
+  				halSpiStrobe(CCxxx0_SWOR);         //启动WOR	
+					//Log_printf("Enter pd\n");
+//					进入wor模式
+
+
+
+
+
+
 
         /*
         if (GucCount++ > 1000)
