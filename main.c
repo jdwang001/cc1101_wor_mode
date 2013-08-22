@@ -9,8 +9,9 @@
 
 //INT16U GucCount;
 INT16U g_module_id = 0;
+INT16U	timer = 0;
 INT8U g_1s_counter=0,g_leng=0,g_count = 0,g_test_count=0;
-INT8U g_wor_flag = 0x00,g_rx_flag = 0,g_rf_rx_flag = 0;
+INT8U g_wor_flag = 0x00,g_rx_flag = 0,g_rf_rx_flag = 0,g_rx_timeout = 0x00;
 INT8U	WorCarry[2] = {0xFF,0xFF};
 INT8U TxBuf[64];	 			// 11字节, 如果需要更长的数据包,请正确设置
 INT8U RxBuf[64];
@@ -82,7 +83,7 @@ const RF_SETTINGS rfSettings =
 
 void main()
 {
-    INT8U i=0,s_count=0;;
+    INT8U i=0;
     g_leng =55;  
 
     CpuInit();
@@ -90,17 +91,62 @@ void main()
     halRfWriteRfSettings();
     halSpiWriteBurstReg(CCxxx0_PATABLE, PaTabel, 8);
 		CC1101_Setwor();
-		
-		UART_init();
    	Log_printf("initialization ok\n");
-   	Int1Init();
+
+    G_IT_ON;						// 开启单片机全局中断
+    
+//    while (1)
+//    {
+//    	//Log_printf("first pd\n");
+//    	INT1_ON;												// 开外部中断
+//			PCON |= PD_ON;									// 从掉电模式唤醒后，程序从这行开市
+//			if( 0x55 == g_wor_flag )
+//			{
+//					g_wor_flag = 0x00;
+//					CC1101_Worwakeup();
+//					while( 0x55 == g_rf_rx_flag  )//&& 0x00 == g_rx_timeout
+//					{
+//						CC1101_EnterRx(RxBuf);
+//					}
+//			}
+//			halSpiStrobe(CCxxx0_SWORRST);      //复位到 事件1
+//			halSpiStrobe(CCxxx0_SWOR);         //启动WOR	
+//			//Log_printf("Exit pd\n");
+//    }						
 
     while (1)
     {
     	//Log_printf("first pd\n");
-    	INT1_ON;
+    	INT1_ON;												// 开外部中断
 			PCON |= PD_ON;									// 从掉电模式唤醒后，程序从这行开市
-						
+//			if( 0x55 == g_wor_flag )
+//			{
+////					g_wor_flag = 0x00;
+////					CC1101_Worwakeup();
+////
+////					while( 0x55 == g_rf_rx_flag  )//&& 0x00 == g_rx_timeout
+////					{
+////						//CC1101_EnterRx(RxBuf);
+////						halRfRX2(RxBuf,&g_test_count);
+////					}
+//						Log_printf("Enter Rx\n");
+//						while(g_wor_flag)
+//						halRfRX2(RxBuf,&g_test_count);
+//
+//			}
+			halSpiStrobe(CCxxx0_SWORRST);      //复位到 事件1
+			halSpiStrobe(CCxxx0_SWOR);         //启动WOR	
+			Log_printf("Exit pd\n");
+    }	
+
+
+
+
+
+
+
+
+
 //			while ( 0x55 == g_rx_flag )
 //			{
 //				//Usart_printf(TxBuf,g_count);				
@@ -117,84 +163,4 @@ void main()
 			
 //			Usart_printf(&g_wor_flag,1);
 //			Log_printf("Exit pd\n");
-
-			
-
-
-			while( 0x55 == g_wor_flag )
-			{
-					g_wor_flag = 0x00;
-					CC1101_Worwakeup();
-					while( 0x55 == g_rf_rx_flag )
-					{
-						//g_rf_rx_flag = 0x00;
-						//halRfReceivePacket(RxBuf,&g_leng);
-						CC1101_EnterRx(RxBuf,&g_leng);
-					}
-			}
-
-					
-
-					
-					//CC1101_EnterRx(RxBuf, 11);
-					halSpiStrobe(CCxxx0_SWORRST);      //复位到 事件1
-  				halSpiStrobe(CCxxx0_SWOR);         //启动WOR	
-					//Log_printf("Enter pd\n");
-//					进入wor模式
-
-
-
-
-
-
-
-        /*
-        if (GucCount++ > 1000)
-        {
-            GucCount = 0;
-            halRfSendPacket(TxBuf,11);	// Transmit Tx buffer data
-            LED_R = ~LED_R;
-        }	 
-        */
-        	
-        	//if(halRfReceivePacket(RxBuf,&leng))
-//			while(GDO0)
-//	        if(CC1101_Worwakeup(RxBuf,&leng))
-//	        {							 	
-//	            LED_B0 = ~LED_B0; 
-	            //delay(5);
-//	            ES=0;
-//				
-//	            for(i=0;i<s_count; i++)
-//	            {   		  
-//	                SBUF=RxBuf[i];
-//	                while (!TI)	;
-//	                TI=0;
-//	            }
-//	            ES=1;
-	           	// GucCount = 0;
-	            //delay(10000);
-	            //halRfSendPacket(TxBuf,11);	// Transmit Tx buffer data
-//	        }
-        
-//        if(halRfReceivePacket(RxBuf,&leng))
-//        {							 	
-//            LED_B0 = ~LED_B0; 
-//            //delay(5);
-//            ES=0;
-//			
-//            for(i=0;i<11; i++)
-//            {   		  
-//                SBUF=RxBuf[i];
-//                while (!TI)	;
-//                TI=0;
-//            }
-//            ES=1;
-//
-//           	// GucCount = 0;
-//            //delay(10000);
-//            //halRfSendPacket(TxBuf,11);	// Transmit Tx buffer data
-//        }
-        
-    }
 }

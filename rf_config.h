@@ -3,7 +3,7 @@
 
 #include "mcu_config.h"
 
-#define	F_xosc							26000000		// RF晶振频率
+#define	F_xosc							26000000L		// RF晶振频率
 #define WRITE_BURST     		0x40				// 连续写
 #define READ_SINGLE     		0x80				// 读
 #define READ_BURST      		0xC0				// 连续读
@@ -161,11 +161,11 @@ void halRfWriteRfSettings(void);
 void halRfSendPacket(INT8U *txBuffer, INT8U size);
 INT8U halRfReceivePacket(INT8U *rxBuffer, INT8U *length);
 INT8U halRfWorwakeup(INT8U *rxBuffer, INT8U *length);
-//INT8U CC1101_Worwakeup(INT8U *rxBuffer, INT8U *length);
 INT8U CC1101_Worwakeup(void);
 INT8U CC1101_InitWOR(INT32U Time);
 INT8U CC1101_Setwor(void);
 void Rf_wakeup();
 void CC1101_Wakeupcarry(INT8U *worcarry, INT8U size,INT8U s);
-INT8U CC1101_EnterRx(INT8U *rxBuffer, INT8U *length); 
+INT8U CC1101_EnterRx(INT8U *rxBuffer); 
+INT8U halRfRX2(INT8U *rxBuffer, INT8U *length);
 #endif

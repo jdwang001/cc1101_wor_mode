@@ -7,12 +7,15 @@
 #define		INT8U			unsigned char
 #define		INT16U		unsigned int
 #define		INT32U		unsigned long
+#define		F_mcu			11059200L				// MCU晶振频率
 #define		PD_ON			0x02
 #define		PD_OFF		0xFD
 #define		G_IT_OFF	EA=0
 #define		G_IT_ON		EA=1						// 定义打开全局中断宏
 #define		INT1_OFF	EX1=0
 #define		INT1_ON 	EX1=1						// 定义打开INT1中断宏
+#define		TIMER0_OFF TR0=0					// 定时器0停止运行
+#define		TIMER0_ON  TR0=1					// 定时器0开始运行
 
 sbit	MOSI	=	P0^0;   
 sbit	SCK		=	P0^1;   
@@ -31,8 +34,9 @@ sbit LED_D2	=	P2^1;
 sbit LED_D3 = P2^2;
 sbit LED_D4	=	P2^3;
 
+extern INT16U timer;
 extern INT16U	g_module_id;
-extern INT8U g_1s_counter,g_leng,g_count,g_test_count; 
+extern INT8U g_1s_counter,g_leng,g_count,g_test_count,g_rf_rx_flag,g_rx_timeout; 
 extern INT8U g_rx_flag;
 extern INT8U TxBuf[64];	 			// 11字节, 如果需要更长的数据包,请正确设置
 extern INT8U RxBuf[64];
@@ -46,5 +50,7 @@ void Usart_printf(INT8U *p_uart,INT8U num);
 void delay(unsigned int s);
 void uart_isr();
 INT8U SpiTxRxByte(INT8U dat);
+void	Timer0_Init(INT16U ms);
+void timer0_isr();
 
 #endif
