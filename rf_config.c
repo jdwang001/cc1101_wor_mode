@@ -413,8 +413,8 @@ INT8U halRfRX2(INT8U *rxBuffer, INT8U *length)
     if ((halSpiReadStatus(CCxxx0_RXBYTES) & BYTES_IN_RXFIFO)) //如果接的字节数不为0
     {
         packetLength = halSpiReadReg(CCxxx0_RXFIFO);//读出第一个字节，此字节为该帧数据长度
-				//delay(100);
-				Usart_printf(&packetLength,1);
+				delay(100);
+				//Usart_printf(&packetLength,1);
 		
 		if ( packetLength > 2 )	
 	    {		
@@ -434,8 +434,9 @@ INT8U halRfRX2(INT8U *rxBuffer, INT8U *length)
 	        }
 	        else
 	        {	
+	        	Log_printf("3 and crc\n");
 	        	return 0;
-			}
+					}
 	    }
 
 //        if (packetLength == 2) 		//如果所要的有效数据长度小于等于接收到的数据包的长度
@@ -481,7 +482,7 @@ INT8U halRfRX2(INT8U *rxBuffer, INT8U *length)
 									//Timer0_Init(1);
 									//TIMER0_ON;																						// 开启定时器0 定时1s
 									//Log_printf("Timer next\n");
-									Usart_printf(wor_data,packetLength);
+									//Usart_printf(wor_data,packetLength);
 		            	return packetLength;
 		            }
 		            else
@@ -497,6 +498,7 @@ INT8U halRfRX2(INT8U *rxBuffer, INT8U *length)
         	}        
 
         //*length = packetLength;
+        Log_printf("not 2 3\n");
         halSpiStrobe(CCxxx0_SFRX);		//清洗接收缓冲区
         return 0;
     } 
@@ -771,8 +773,6 @@ void Rf_wakeup() interrupt	2
 	 PCON &= PD_OFF; 
 	 LED_D1 = ~LED_D1; 
 	 g_wor_flag = 0x55;
-						while(g_wor_flag)
-						halRfRX2(RxBuf,&g_test_count);
 	 //Log_printf("Enter wor\n");
 	 //INT1_ON;												//2013年8月15日16:22:59
 }

@@ -113,30 +113,33 @@ void main()
 //			halSpiStrobe(CCxxx0_SWOR);         //启动WOR	
 //			//Log_printf("Exit pd\n");
 //    }						
-
+//		INT1_ON;
     while (1)
     {
-    	//Log_printf("first pd\n");
+    	//Log_printf("start next\n");
     	INT1_ON;												// 开外部中断
 			PCON |= PD_ON;									// 从掉电模式唤醒后，程序从这行开市
-//			if( 0x55 == g_wor_flag )
-//			{
-////					g_wor_flag = 0x00;
-////					CC1101_Worwakeup();
-////
-////					while( 0x55 == g_rf_rx_flag  )//&& 0x00 == g_rx_timeout
-////					{
-////						//CC1101_EnterRx(RxBuf);
-////						halRfRX2(RxBuf,&g_test_count);
-////					}
-//						Log_printf("Enter Rx\n");
-//						while(g_wor_flag)
-//						halRfRX2(RxBuf,&g_test_count);
+			if( 0x55 == g_wor_flag )
+			{
+//					g_wor_flag = 0x00;
+//					CC1101_Worwakeup();
 //
-//			}
+//					while( 0x55 == g_rf_rx_flag  )//&& 0x00 == g_rx_timeout
+//					{
+//						//CC1101_EnterRx(RxBuf);
+//						halRfRX2(RxBuf,&g_test_count);
+//					}
+						//Log_printf("Enter Rx\n");
+						while(g_wor_flag)
+						halRfRX2(RxBuf,&g_test_count);
+
+//						halSpiStrobe(CCxxx0_SWORRST);      //复位到 事件1
+//						halSpiStrobe(CCxxx0_SWOR);         //启动WOR	
+//						INT1_ON;
+			}
 			halSpiStrobe(CCxxx0_SWORRST);      //复位到 事件1
 			halSpiStrobe(CCxxx0_SWOR);         //启动WOR	
-			Log_printf("Exit pd\n");
+			//Log_printf("Exit pd\n");
     }	
 
 
