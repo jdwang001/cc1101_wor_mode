@@ -15,6 +15,7 @@ INT8U g_wor_flag = 0x00,g_rx_flag = 0,g_rf_rx_flag = 0,g_rx_timeout = 0x00;
 INT8U	WorCarry[2] = {0xFF,0xFF};
 INT8U TxBuf[64];	 			// 11字节, 如果需要更长的数据包,请正确设置
 INT8U RxBuf[64];
+INT8U	Test[20] = "Send Packet";
 //***************更多功率参数设置可详细参考DATACC1100英文文档中第48-49页的参数表******************
 //INT8U PaTabel[8] = {0x04 ,0x04 ,0x04 ,0x04 ,0x04 ,0x04 ,0x04 ,0x04};  //-30dBm   功率最小
 //INT8U PaTabel[8] = {0x60 ,0x60 ,0x60 ,0x60 ,0x60 ,0x60 ,0x60 ,0x60};  //0dBm
@@ -42,7 +43,7 @@ const RF_SETTINGS rfSettings =
         0xF8,   // MDMCFG0   Modem configuration.		不必关心
         
         // 0信道
-        0x00,   // CHANNR    Channel number.				
+        0x03,   // CHANNR    Channel number.				
         0x47,   // DEVIATN   Modem deviation setting (when FSK modulation is enabled).
         
         // 少了两个配置，主要针对于wor模式的操作
@@ -93,7 +94,21 @@ void main()
 		CC1101_Setwor();
    	Log_printf("initialization ok\n");
 
-    G_IT_ON;						// 开启单片机全局中断
+    G_IT_ON;															// 开启单片机全局中断
+
+    while (1)
+    {
+    	INT1_ON;														// 开外部中断
+			PCON |= PD_ON;											// 从掉电模式唤醒后，程序从这行开市
+			if( 0x55 == g_wor_flag )
+			{
+				while(g_wor_flag)
+				halRfRxPacket(RxBuf);
+			}
+			halSpiStrobe(CCxxx0_SWORRST);      // 复位到 事件1
+			halSpiStrobe(CCxxx0_SWOR);         // 启动WOR	
+			//Log_printf("Exit pd\n");
+    }	
     
 //    while (1)
 //    {
@@ -113,57 +128,4 @@ void main()
 //			halSpiStrobe(CCxxx0_SWOR);         //启动WOR	
 //			//Log_printf("Exit pd\n");
 //    }						
-//		INT1_ON;
-    while (1)
-    {
-    	//Log_printf("start next\n");
-    	INT1_ON;												// 开外部中断
-			PCON |= PD_ON;									// 从掉电模式唤醒后，程序从这行开市
-			if( 0x55 == g_wor_flag )
-			{
-//					g_wor_flag = 0x00;
-//					CC1101_Worwakeup();
-//
-//					while( 0x55 == g_rf_rx_flag  )//&& 0x00 == g_rx_timeout
-//					{
-//						//CC1101_EnterRx(RxBuf);
-//						halRfRX2(RxBuf,&g_test_count);
-//					}
-						//Log_printf("Enter Rx\n");
-						while(g_wor_flag)
-						halRfRX2(RxBuf,&g_test_count);
-
-//						halSpiStrobe(CCxxx0_SWORRST);      //复位到 事件1
-//						halSpiStrobe(CCxxx0_SWOR);         //启动WOR	
-//						INT1_ON;
-			}
-			halSpiStrobe(CCxxx0_SWORRST);      //复位到 事件1
-			halSpiStrobe(CCxxx0_SWOR);         //启动WOR	
-			//Log_printf("Exit pd\n");
-    }	
-
-
-
-
-
-
-
-
-
-//			while ( 0x55 == g_rx_flag )
-//			{
-//				//Usart_printf(TxBuf,g_count);				
-//				//halRfReceivePacket(RxBuf,&g_leng);
-//				//halRfSendPacket(TxBuf,count);	// Transmit Tx buffer data
-//				//CC1101_Wakeupcarry(WorCarry,2,1);
-//				halRfSendPacket(TxBuf,g_count);
-//				LED_D2=~LED_D2;
-//				g_count = 0;
-//				g_rx_flag = 0x00;
-//				Log_printf("Worcarry over\n");
-//
-//			}
-			
-//			Usart_printf(&g_wor_flag,1);
-//			Log_printf("Exit pd\n");
 }

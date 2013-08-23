@@ -233,19 +233,20 @@ void uart_isr()  interrupt 4   //串口中断
 //函数名：void ser()  interrupt 4
 //输入：无
 //输出：接收到的串口数据
-//功能描述：中断接收串口数据帧
+//功能描述：中断接收串口数据帧，定时2s
 //*****************************************************************************************	
 void timer0_isr()  interrupt 1   //Timer0中断
 {
 	
 	Timer0_Init(1);
 	timer++;
-	if(timer>=1000)
+	if(timer>=10000)
 	{
 		//g_rx_timeout = 0x55;
-		g_rf_rx_flag = 0x00;
+		//g_rf_rx_flag = 0x00;
+		g_wor_flag = 0x00;				// 定时时间到，退出全速接收模式
 		LED_D3 = ~LED_D3;
 		timer = 0;
-		TIMER0_OFF;
+		TIMER0_OFF;								// 关闭定时器
 	}
 }

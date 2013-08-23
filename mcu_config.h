@@ -34,6 +34,7 @@ sbit LED_D2	=	P2^1;
 sbit LED_D3 = P2^2;
 sbit LED_D4	=	P2^3;
 
+extern INT8U g_wor_flag;
 extern INT16U timer;
 extern INT16U	g_module_id;
 extern INT8U g_1s_counter,g_leng,g_count,g_test_count,g_rf_rx_flag,g_rx_timeout; 
