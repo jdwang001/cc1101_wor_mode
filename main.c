@@ -3,12 +3,17 @@
 // Function:	rf底层驱动
 // Author:		wzd
 // Date:			2013年8月15日10:21:25
+//2013年8月24日9:42:18读状态寄存器需要进行修改
+//INT8U halSpiReadStatus(INT8U addr) 
+//{
+//    INT8U value,temp;
+//    temp = addr | READ_BURST;		//写入要读的状态寄存器的地址同时写入读命令
+    
 
+//#include "rf_config.h"
+#include "rf_route.h"
 
-#include "rf_config.h"
-
-//INT16U GucCount;
-INT16U g_module_id = 0;
+Module_Sn g_module_id;
 INT16U	timer = 0;
 INT8U g_1s_counter=0,g_leng=0,g_count = 0,g_test_count=0;
 INT8U g_wor_flag = 0x00,g_rx_flag = 0,g_rf_rx_flag = 0,g_rx_timeout = 0x00;
@@ -88,10 +93,17 @@ void main()
     g_leng =55;  
 
     CpuInit();
+    
+    //验证读取的MCUSN
+    Usart_printf(&g_module_id.Sn[0],1);
+    Usart_printf(&g_module_id.Sn[1],1);
+    
     POWER_UP_RESET_CC1100();
     halRfWriteRfSettings();
     halSpiWriteBurstReg(CCxxx0_PATABLE, PaTabel, 8);
 		CC1101_Setwor();
+
+
    	Log_printf("initialization ok\n");
 
     G_IT_ON;															// 开启单片机全局中断
@@ -129,3 +141,53 @@ void main()
 //			//Log_printf("Exit pd\n");
 //    }						
 }
+
+//void main() 
+// { 
+//          INT16U i; 
+//          INT8U eerom;
+//          UART_init();
+//          LED_D4 = ~LED_D4;
+//          delay(50000);
+//          //P1 = 0xfe;                                    //1111,1110 System Reset OK 
+//          //Delay(10);                                    //Delay 
+//          IapEraseSector(IAP_ADDRESS);                  //Erase current sector 
+//          for (i=0; i<512; i++)                         //Check whether all sector data is FF 
+//          { 
+//                   if (IapReadByte(IAP_ADDRESS+i) != 0xff) 
+//                   goto Error;                          //If error, break 
+//          } 
+//          //P1 = 0xfc;                                    //1111,1100 Erase successful 
+//          //Delay(10);                                    //Delay 
+// 
+//          LED_D3 = ~LED_D3;
+//          delay(50000);                                                                                   
+//          for (i=0; i<512; i++)                         //Program 512 bytes data into data flash 
+//                                                                               
+//          {                                                                
+//                   IapProgramByte(IAP_ADDRESS+i, (INT8U)i);         
+//          }                                                    
+//                                                                
+//          //P1 = 0xf8;                                    //1111,1000 Program successful                                                                                                                                                                              
+//          //Delay(10);                                    //Delay 
+//          LED_D2 = ~LED_D2;
+//          delay(50000);
+//                                                             
+//          for (i=0; i<512; i++)                        //Verify 512 bytes data 
+//          {                             
+//                   //eerom = IapReadByte(IAP_ADDRESS+i);
+//                                     
+//                   if ( (eerom = IapReadByte(IAP_ADDRESS+i)) != (INT8U)i)                                
+//                   goto Error;                          //If error, break 
+//                   Usart_printf(&eerom,1);    
+//                              
+//          }           
+//          LED_D1 = ~LED_D1;
+//          delay(50000);
+//          //P1 = 0xf0;                                    //1111,0000 Verify successful 
+//          while (1); 
+//Error: 
+//          //P1 &= 0x7f;                                   //0xxx,xxxx IAP operation fail 
+//          Log_printf("Error EEPROM");
+//          while (1); 
+// } 

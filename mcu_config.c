@@ -6,6 +6,131 @@
 
 #include "mcu_config.h"
 
+
+/*****************************************************************************************
+//函数名：void IapIdle(void) 
+//输入：无
+//输出：无
+//功能描述：禁止ISP/IAP/EEPROM 功能，是MCU处于安全状态
+/*****************************************************************************************/
+void IapIdle(void) 
+{ 
+  IAP_CONTR = 0;                        //Close IAP function 
+  IAP_CMD = 0;                          //Clear command to standby 
+  IAP_TRIG = 0;                         //Clear trigger register 
+  IAP_ADDRH = 0x80;                     //Data ptr point to non-EEPROM area 
+  IAP_ADDRL = 0;                        //Clear IAP address to prevent misuse 
+} 
+
+/*****************************************************************************************
+//函数名：INT8U IapReadByte(INT16U addr) 
+//输入：EEPROM地址
+//输出：EEPROM地址中的数据
+//功能描述：从EEPROM中读取一个字节，
+/*****************************************************************************************/                                               
+INT8U IapReadByte(INT16U addr)                                                
+{         
+  INT8U dat;                             //Data buffer                                                      
+  IAP_CONTR = ENABLE_IAP;               //Open IAP function, and set wait time                                        
+  IAP_CMD = CMD_READ;                   //Set ISP/IAP/EEPROM READ command                                   
+  IAP_ADDRL = addr;                  //Set ISP/IAP/EEPROM address low                                  
+  IAP_ADDRH = addr >> 8;                //Set ISP/IAP/EEPROM address high 
+  IAP_TRIG = 0x5a;                     //Send trigger command1 (0x5a)                  
+  IAP_TRIG = 0xa5;                      //Send trigger command2 (0xa5)               
+  _nop_();                              //MCU will hold here until ISP/IAP/EEPROM                                        
+                                         //operation complete 
+  dat = IAP_DATA;                       //Read ISP/IAP/EEPROM data 
+  IapIdle();                            //Close ISP/IAP/EEPROM function  
+  return dat;                           //Return Flash data 
+} 
+
+/*****************************************************************************************
+//函数名：void IapProgramByte(INT16U addr, INT8U dat)  
+//输入：addr：EEPROM地址，dat：EEPROM地址中的数据
+//输出：无
+//功能描述：写入一个字节
+/*****************************************************************************************/ 
+void IapProgramByte(INT16U addr, INT8U dat) 
+{ 
+  IAP_CONTR = ENABLE_IAP;              //Open IAP function, and set wait time 
+  IAP_CMD = CMD_PROGRAM;               //Set ISP/IAP/EEPROM PROGRAM command 
+  IAP_ADDRL = addr;                    //Set ISP/IAP/EEPROM address low 
+  IAP_ADDRH = addr >> 8;               //Set ISP/IAP/EEPROM address high 
+  IAP_DATA = dat;                      //Write ISP/IAP/EEPROM data 
+  IAP_TRIG = 0x5a;                     //Send trigger command1 (0x5a) 
+  IAP_TRIG = 0xa5;                     //Send trigger command2 (0xa5) 
+  _nop_();                             //MCU will hold here until ISP/IAP/EEPROM 
+                                      //operation complete 
+  IapIdle(); 
+} 
+
+/*****************************************************************************************
+//函数名：void IapEraseSector(INT16U addr) 
+//输入：addr：EEPROM地址
+//输出：无
+//功能描述：擦出一个扇区（512个字节为一个扇区）
+/*****************************************************************************************/ 
+void IapEraseSector(INT16U addr)                                 
+{                                                                                                                                                         
+  IAP_CONTR = ENABLE_IAP;              //Open IAP function, and set wait time                                       
+  IAP_CMD = CMD_ERASE;                 //Set ISP/IAP/EEPROM ERASE command  扇区擦除                                 
+  IAP_ADDRL = addr;                    //Set ISP/IAP/EEPROM address low                            
+  IAP_ADDRH = addr >> 8;               //Set ISP/IAP/EEPROM address high                          
+  IAP_TRIG = 0x5a;                    //Send trigger command1 (0x5a) 
+  IAP_TRIG = 0xa5;                     //Send trigger command2 (0xa5)              
+  _nop_();                           //MCU will hold here until ISP/IAP/EEPROM                                    
+                                      //operation complete 
+  IapIdle(); 
+}
+
+/*****************************************************************************************
+//函数名：void IapEraseByte(INT16U addr,INT8U size)  
+//输入：addr：EEPROM地址  size：擦除字节个数
+//输出：1擦除成功 0擦除失败
+//功能描述：按字节擦除
+/*****************************************************************************************/  
+INT8U IapEraseByte(INT16U addr,INT8U size)                                 
+{   
+	INT8U i;
+	INT16U addr_temp;
+	
+	addr_temp = addr;
+	for(i=0;i<size;i++)
+	{                                                                                                                                                      
+	  IAP_CONTR = ENABLE_IAP;              //Open IAP function, and set wait time                                       
+	  IAP_CMD = CMD_PROGRAM;                 //Set ISP/IAP/EEPROM ERASE command  字节擦除命令                                 
+	  IAP_ADDRL = addr_temp;                    //Set ISP/IAP/EEPROM address low                            
+	  IAP_ADDRH = addr_temp >> 8;               //Set ISP/IAP/EEPROM address high                          
+	  IAP_TRIG = 0x5a;                    //Send trigger command1 (0x5a) 
+	  IAP_TRIG = 0xa5;                     //Send trigger command2 (0xa5)              
+	  _nop_();                           //MCU will hold here until ISP/IAP/EEPROM                                    
+	                                      //operation complete 
+	  addr_temp++;
+	}
+  IapIdle(); 
+  
+  for (i=0; i<size; i++)                         //Check whether all erase data is FF
+	{
+		if (IapReadByte(addr+i) != 0xff)
+			return 0;		
+	}
+	return 1;
+} 
+/*****************************************************************************************
+//函数名：void IapReadModelSn(INT16U addr) 
+//输入：addr：EEPROM地址
+//输出：无
+//功能描述：读取设置的Model_Sn addr：MODEL_SN_ADDRESS
+/*****************************************************************************************/ 
+void IapReadModelSn(INT16U addr)
+{
+	INT8U i;
+	for(i=0;i<size;i++)
+	{
+		g_module_id.Sn[i] = IapReadByte(addr+i);
+	}
+}
+
 /*****************************************************************************************
 //函数名：void Int1Init(void)
 //输入：无
@@ -81,6 +206,7 @@ void CpuInit(void)
 {	 
 	
     //LED_R = ~LED_R;
+    IapReadModelSn(MODEL_SN_ADDRESS);
     Timer0_Init(1);
     Int1Init();
    	UART_init();   

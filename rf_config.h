@@ -145,7 +145,7 @@ typedef struct S_RF_SETTINGS
 extern INT8U g_rf_rx_flag;
 extern INT8U WorCarry[2];
 extern INT8U PaTabel[8];
-extern Test[20];
+extern INT8U Test[20];
 extern const RF_SETTINGS rfSettings;
 
 void halWait(INT16U timeout);

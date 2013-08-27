@@ -171,6 +171,17 @@ INT8U halSpiReadStatus(INT8U addr)
     CSN = 1;
     return value;
 }
+//INT8U halSpiReadStatus(INT8U addr) 
+//{
+//    INT8U value,temp;
+//    temp = addr | READ_SINGLE;		//写入要读的状态寄存器的地址同时写入读命令
+//    CSN = 0;
+//    while (MISO);
+//    SpiTxRxByte(temp);
+//    value = SpiTxRxByte(0);
+//    CSN = 1;
+//    return value;
+//}
 
 //*****************************************************************************************
 //函数名：void halRfWriteRfSettings(RF_SETTINGS *pRfSettings)
@@ -433,7 +444,7 @@ INT8U halRfRxPacket(INT8U *rxBuffer)
       if (packetLength == 2) 																					// 如果所要的有效数据长度等于接收到的数据包的长度
       {
           halSpiReadBurstReg(CCxxx0_RXFIFO, wor_data, packetLength); 	// 读出所有接收到的数据
-					if ( (wor_data[0]==BROADCAST && wor_data[1]==BROADCAST) || ( (wor_data[0]==g_module_id) && (wor_data[1]==g_module_id>>8) ) )
+					if ( (wor_data[0]==BROADCAST && wor_data[1]==BROADCAST) || ( (wor_data[0]==g_module_id.Sn[0]) && (wor_data[1]==g_module_id.Sn[1]) ) )
 					//if ( (wor_data[0]==0x55 && wor_data[1]==0xAA) || (wor_data[0]==g_module_id && wor_data[1]==g_module_id>>8) )
 					{
             //Log_printf("Enter wor\n");
@@ -633,7 +644,7 @@ INT8U CC1101_Worwakeup(void)
 	        {
 	            halSpiReadBurstReg(CCxxx0_RXFIFO, wor_data, packetLength); 	//读出所有接收到的数据
 	            //*length = packetLength;																		//把接收数据长度的修改为当前数据的长度
-							if ( (wor_data[0]==BROADCAST && wor_data[1]==BROADCAST) || ( (wor_data[0]==g_module_id) && (wor_data[1]==g_module_id>>8) ) )
+							if ( (wor_data[0]==BROADCAST && wor_data[1]==BROADCAST) || ( (wor_data[0]==g_module_id.Sn[0]) && (wor_data[1]==g_module_id.Sn[1]) ) )
 							//if ( (wor_data[0]==0x55 && wor_data[1]==0xAA) || (wor_data[0]==g_module_id && wor_data[1]==g_module_id>>8) )
 							{
 		            //Log_printf("Enter wor\n");
