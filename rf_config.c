@@ -446,7 +446,10 @@ INT8U halRfRxPacket(INT8U *rxBuffer)
 		        	return packetLength;
 		        }
 		        else
+		        {
+		        	Log_printf("Error protocol\n");
 		        	return 0;
+		        }
 	        }
 	        else
 	        {	
@@ -768,7 +771,7 @@ void Rf_wakeup() interrupt	2
 	 //CC1101_Worwakeup();
 	 g_wor_flag = 0x55;
 	 
-	 //Log_printf("Enter wor\n");
+	 Log_printf("Enter INT1\n");
 	 //INT1_ON;												//2013Äê8ÔÂ15ÈÕ16:22:59
 }
 

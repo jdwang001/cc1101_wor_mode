@@ -14,7 +14,7 @@ Module_Sn g_module_id,g_gateway;
 INT16U	timer = 0;
 INT8U g_wor_flag = 0x00,g_rx_flag = 0,g_rf_rx_flag = 0,g_rx_timeout = 0x00,g_enter_rx = 0x00;
 
-INT8U g_search = 0x03;							// 进行3次搜索路由
+INT8U g_search = 0x03,g_getroute=0x00;							// 进行3次搜索路由
 INT8U g_rid = 0x01,g_pre_rid = 0x00;
 INT8U	WorCarry[2] = {0xFF,0xFF};
 INT8U TxBuf[64];	 			// 11字节, 如果需要更长的数据包,请正确设置
@@ -26,7 +26,7 @@ INT16U g_pre_src;
 //INT8U	Test[20] = "Send Packet";
 //AA 0B 81 01 51 01 00 00 01 00 01 00 00 8B
 // 路由申请命令
-INT8U SearchData[14] = {0xAA,0x0B,0x81,0x01,0x51,0x01,0x00,0x00,0x01,0x00,0x00,0x00,0x00,0xCC};
+INT8U SearchData[14] = {0xAA,0x0B,0x81,0x01,0x51,0x01,0x00,0x00,0x01,0x00,0x00,0x00,0x00,0x00};
 //***************更多功率参数设置可详细参考DATACC1100英文文档中第48-49页的参数表******************
 //INT8U PaTabel[8] = {0x04 ,0x04 ,0x04 ,0x04 ,0x04 ,0x04 ,0x04 ,0x04};  //-30dBm   功率最小
 //INT8U PaTabel[8] = {0x60 ,0x60 ,0x60 ,0x60 ,0x60 ,0x60 ,0x60 ,0x60};  //0dBm
@@ -95,7 +95,9 @@ const RF_SETTINGS rfSettings =
 
 void main()
 {
-    //INT8U i=0;
+    INT8U i=0;
+    INT8U search_temp = 0x03;
+    
     CpuInit();
     //验证读取的MCUSN
     Log_printf("MCUSN:");
@@ -125,6 +127,7 @@ void main()
 						// 将网关数据写入
 						IapProgramByte(GATEWAY_ADDRESS,TxBuf[1]);
 						IapProgramByte(GATEWAY_ADDRESS+1,TxBuf[2]);
+						g_gateway.Sn_temp = IapReadByte(GATEWAY_ADDRESS);
 					}
 					
 					if( IapEraseByte(MODEL_SN_ADDRESS,2) )
@@ -132,6 +135,7 @@ void main()
 						// 将地址数据写入
 						IapProgramByte(MODEL_SN_ADDRESS,TxBuf[3]);
 						IapProgramByte(MODEL_SN_ADDRESS+1,TxBuf[4]);
+						g_module_id.Sn_temp = IapReadByte(MODEL_SN_ADDRESS);
 					}
     	}
     }
@@ -146,38 +150,54 @@ void main()
     Log_printf("\r\n");
 
     // 地址网关设置完成
-    LED_D1 = ~LED_D1;
+    LED_D2 = ~LED_D2;
     // 读出搜索模式 为0 则不进行搜索
-		g_search = IapReadByte(SEARCH_MODE);
+    g_getroute = IapReadByte(SEARCH_MODE);
+		if( 0x55 != g_getroute )
+		{
 SearchMode:
-  	while( g_search-- != 0 )
-  	{
-  		SearchData[3] = g_rid;
-  		// 网关地址
-  		SearchData[6] = g_gateway.Sn[0];
-  		SearchData[7] = g_gateway.Sn[1];
-			// 源地址(模块ID)
-  		SearchData[9]  = g_module_id.Sn[0];
-  		SearchData[10] = g_module_id.Sn[1];
-			// 目的地址(网关地址)
-   		SearchData[11] = g_gateway.Sn[0];
-  		SearchData[12] = g_gateway.Sn[1];   		
-  		    		
-  		// 进行唤醒时，只需要把路由标识滤除即可 将路由标识高字节分出一位代表是模块还是基站
-  		// 首先发送唤醒波，而后发送数据 进行路由搜索时，使用广播唤醒
-  		CC1101_Wakeupcarry(WorCarry, 2,2);
-  		halRfSendPacket(SearchData, 14);
-  		g_rid++;															// 发送完成后g_rid自增
-  		//g_wor_flag = 0x55;
-  		timer = 0; 
-			Timer0_Init(1);
-			TIMER0_ON;	
-			g_enter_rx = 0x55;
-			goto EnterRx;
-  	}
+	  	while( search_temp-- != 0 )
+	  	{
+	  		SearchData[3] = g_rid;
+	  		// 网关地址
+	  		SearchData[6] = g_gateway.Sn[0];
+	  		SearchData[7] = g_gateway.Sn[1];
+				// 源地址(模块ID)
+	  		SearchData[9]  = g_module_id.Sn[0];
+	  		SearchData[10] = g_module_id.Sn[1];
+				// 目的地址(网关地址)
+	   		SearchData[11] = g_gateway.Sn[0];
+	  		SearchData[12] = g_gateway.Sn[1];   		
+	  		
+	  		for( i=0;i<13;i++)
+	  		{
+	  			SearchData[13] += SearchData[i];
+	  		}    		
+	  		// 进行唤醒时，只需要把路由标识滤除即可 将路由标识高字节分出一位代表是模块还是基站
+	  		// 首先发送唤醒波，而后发送数据 进行路由搜索时，使用广播唤醒
+	  		CC1101_Wakeupcarry(WorCarry, 2,2);
+	  		halRfSendPacket(SearchData, 14);
+	  		g_rid++;															// 发送完成后g_rid自增
+	  		//g_wor_flag = 0x55;
+	  		timer = 0; 
+				Timer0_Init(10);
+				TIMER0_ON;	
+				g_search = 0x55;
+				g_enter_rx = 0x55;
+				SearchData[13] = 0x00;
+				goto EnterRx;
+	  	}	
+	  	g_search = 0x00;		
+		}
+		else 
+		{
+			g_search = 0x00;
+		}
+
   	
     while (1)
     {
+    	Log_printf("Enter wor\n");
 			if( 0x55 == g_wor_flag )
 			{
 				CC1101_Worwakeup();
@@ -192,17 +212,15 @@ EnterRx:
 					g_rf_rx_flag = 0x00;	
 					RfRouteManage(RxBuf,&rf_route_data);
 				}
-				if( g_search != 0 ) // 搜索到路径后，此处直接给g_search
-				goto SearchMode;
+				if( 0x55 == g_search )									// 若没有搜索到路径，则跳转回搜索路径
+					goto SearchMode;
 			}
 			
-			halSpiStrobe(CCxxx0_SWORRST);      // 复位到 事件1
-			halSpiStrobe(CCxxx0_SWOR);         // 启动WOR	
-			INT1_ON;														// 开外部中断
-			PCON |= PD_ON;											// 从掉电模式唤醒后，程序从这行开市			
-
-			
-			//Log_printf("Exit pd\n");
+			halSpiStrobe(CCxxx0_SWORRST);					// 复位到 事件1
+			halSpiStrobe(CCxxx0_SWOR);						// 启动WOR	
+			INT1_ON;															// 开外部中断
+			PCON |= PD_ON;												// 从掉电模式唤醒后，程序从这行开市			
+			Log_printf("Exit pd\n");
     }	
     
 //    while (1)

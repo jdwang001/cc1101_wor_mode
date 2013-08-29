@@ -6,7 +6,6 @@
 
 #include "rf_route.h"
 
-// 唤醒分为两种，广播和模块唤醒 此处处理是否是模块唤醒？？？？？？？？？？
 // 判断数据是否是发送给本模块
 INT8U IsMe(Rf_Route* routepacket)
 {
@@ -40,7 +39,7 @@ void AckARL(Rf_Route* routepacket,INT8U* psentrfdata)
   psentrfdata[5] = routepacket->Gateway.Sn[1];
   
   // 对路由数据进行处理
-  routedatalength = (routepacket->RfRouteData.Orien & 0x0F)*2;
+  routedatalength = ( (routepacket->RfRouteData.Orien & 0x0F)-1 )*2;
   psentrfdata[6] = (routepacket->RfRouteData.Orien&0x0F)|0x50;		// 更改方向
   psentrfdata[7] = routepacket->RfRouteData.CRPL;
   // 当路由深度为0时，pRouteData不指向数组
@@ -71,7 +70,7 @@ void AckARL(Rf_Route* routepacket,INT8U* psentrfdata)
 	{
 		psentrfdata[routeprotocol+5+datalength] += psentrfdata[i];
 	}
-	// 提取出当前路由深度  发送唤醒波定点唤醒下级
+	// 提取出当前路由深度  发送唤醒波定点唤醒下级  由于对CRPL进行了操作，所以无需关心方向
 	WorCarry[0] = psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2];
 	WorCarry[1] = psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2+1];
 	
@@ -103,17 +102,53 @@ void test(Rf_Route* routepacket,INT8U* psentrfdata)
   	psentrfdata[6] = routepacket->RfRouteData.Orien;
   
   // 对路由数据进行处理Orien为0 时  CRPL为1
-  routedatalength = (routepacket->RfRouteData.Orien & 0x0F)*2;
+  routedatalength = ( (routepacket->RfRouteData.Orien & 0x0F)-1 )*2;
+	
+	// key最高位为1，由终端到基站 CRPL++
+	if ( routepacket->Key&0x80)
+		routepacket->RfRouteData.CRPL++;
+	else
+		routepacket->RfRouteData.CRPL--;
+			
   psentrfdata[7] = routepacket->RfRouteData.CRPL;
+
   // 当路由深度为0时，pRouteData不指向数组
- 
-  if( routedatalength != 0 )
-  {
     //routepacket->RfRouteData.pRouteData = &psentrfdata[8];     // 应该将数据放到传入的
-    for(i=0;i<routedatalength;i++)
-    	psentrfdata[8+i] = *(routepacket->RfRouteData.pRouteData+i);
-  }
-  
+		// 将模块Id加入路由表中
+//		if ( 0x81 == routepacket->Key )
+//		{
+//			//routepacket->RfRouteData.CRPL++;
+//	    psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2] = g_module_id.Sn[0];
+//	    psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2+1] = g_module_id.Sn[1];
+//		}	 
+// 
+//  if( routedatalength != 0 )
+//  {
+//    for(i=0;i<routedatalength;i++)
+//    	psentrfdata[8+i] = *(routepacket->RfRouteData.pRouteData+i);
+//  }
+
+	if ( 0x81 == routepacket->Key ) 
+	{
+		if( (routepacket->RfRouteData.Orien & 0x0F) != 1 )
+		{
+			for (i=0; i<2; i++)
+			{
+				// (routepacket->RfRouteData.CRPL-1)*2-2   
+				// (2-1)*2-2 = 0  (3-1)*2-2 = 2  (4-1)*2-2 =  4 (5-1)*2-2 = 6  (6-1)*2-2 = 8
+				// 将自身ID加入路由表中
+				psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2-2+i] = g_module_id.Sn[i];
+			}	
+		}
+	}
+	else 
+	{
+	  if( routedatalength != 0 )
+	  {
+	    for(i=0;i<routedatalength;i++)
+	    	psentrfdata[8+i] = *(routepacket->RfRouteData.pRouteData+i);
+	  }
+	}
   
   // 计算出数据类型后的下标
   routeprotocol = routedatalength +2+6;                              // routelength+2+6 = 下一字段下标
@@ -137,29 +172,21 @@ void test(Rf_Route* routepacket,INT8U* psentrfdata)
 	{
 		psentrfdata[routeprotocol+5+datalength] += psentrfdata[i];
 	}
-
-
-		//CRPL在基站-》终端 自增1
-		if ( routepacket->Key&0x80)
-			routepacket->RfRouteData.CRPL++;
-		else
-			routepacket->RfRouteData.CRPL--;
-
-		// 将模块Id加入路由表中
-		if ( 0x81 == routepacket->Key )
-		{
-			//routepacket->RfRouteData.CRPL++;
-	    psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2] = g_module_id.Sn[0];
-	    psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2+1] = g_module_id.Sn[1];
-		}	
-		
-		//if ( 0x01 == routepacket->Key )
-			//routepacket->RfRouteData.CRPL--;
-
-
-		// 提取出当前路由深度  发送唤醒波定点唤醒下级
+	
+	//WorCarry[0] = psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2];
+	//WorCarry[1] = psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2+1];	
+	// 接收到数据后通过广播转发出去
+	if ( 0x81 == routepacket->Key ) 
+	{
+		// 进行广播唤醒 搜寻路径
+		WorCarry[0] = WorCarry[1] = 0xFF;	
+	}
+	else
+	{
+		// 转发数据时，直接取路由中的数据进行唤醒下级
 		WorCarry[0] = psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2];
-		WorCarry[1] = psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2+1];		
+		WorCarry[1] = psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2+1];
+	}
 	
 	CC1101_Wakeupcarry(WorCarry,2,2);
 	halRfSendPacket(psentrfdata,routepacket->Length+3);
@@ -172,9 +199,11 @@ void AssignRouteLevel(Rf_Route* routepacket,INT8U routesize)
   INT8U *proutedata = routepacket->RfRouteData.pRouteData	;
   
   // 存储搜索到路由标识
-  if ( IapEraseByte(SEARCH_MODE,1) )
+  if ( IapEraseByte(SEARCH_MODE,0x55) )
   	IapProgramByte(SEARCH_MODE,0);			
-  g_search = IapReadByte(SEARCH_MODE);
+  g_getroute = IapReadByte(SEARCH_MODE);
+  g_search = 0x00;
+  //g_enter_rx = 0x00;																						// 搜寻到路径后，防止进入Rx循环
   
   // EEPROM中0x0000字节开始存储搜索模式，模块ID
 	if( IapEraseByte(MODEL_SN_ADDRESS,2) )
@@ -209,16 +238,128 @@ void AssignRouteLevel(Rf_Route* routepacket,INT8U routesize)
 
 void TransmitDataCommand(Rf_Route* routepacket)
 {
-	test(routepacket,RfSentBuf);	
+	test(routepacket,RfSentBuf);
 }
+
+//void DirectTransmitDataCommand(Rf_Route* routepacket)
+//{
+//  // 当路由深度为0时，pRouteData不指向数组
+//    //routepacket->RfRouteData.pRouteData = &psentrfdata[8];     // 应该将数据放到传入的
+//		// 将模块Id加入路由表中
+////		if ( 0x81 == routepacket->Key )
+////		{
+////			//routepacket->RfRouteData.CRPL++;
+////	    psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2] = g_module_id.Sn[0];
+////	    psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2+1] = g_module_id.Sn[1];
+////		}	 
+//// 
+////  if( routedatalength != 0 )
+////  {
+////    for(i=0;i<routedatalength;i++)
+////    	psentrfdata[8+i] = *(routepacket->RfRouteData.pRouteData+i);
+////  }
+//	INT8U i;
+//	INT8U checknum=0;
+//  INT8U routedatalength=0;
+//  INT8U routeprotocol=0;
+//  INT8U datalength=0;
+//
+//  psentrfdata[0] = routepacket->Pre; 
+//  psentrfdata[1] = routepacket->Length; 
+//  psentrfdata[2] = routepacket->Rid;
+//  psentrfdata[3] = routepacket->Key;
+//  
+//  psentrfdata[4] = routepacket->Gateway.Sn[0];
+//  psentrfdata[5] = routepacket->Gateway.Sn[1];
+//  
+//  if( 0x81 == routepacket->Key )
+//  	psentrfdata[6] = routepacket->RfRouteData.Orien+1;		// 在搜寻路由传输给基站时自增1
+//  else
+//  	psentrfdata[6] = routepacket->RfRouteData.Orien;
+//  
+//  // 对路由数据进行处理Orien为0 时  CRPL为1
+//  routedatalength = ( (routepacket->RfRouteData.Orien & 0x0F)-1 )*2;
+//	
+//	// key最高位为1，由终端到基站 CRPL++
+//	if ( routepacket->Key&0x80)
+//		routepacket->RfRouteData.CRPL++;
+//	else
+//		routepacket->RfRouteData.CRPL--;
+//			
+//  psentrfdata[7] = routepacket->RfRouteData.CRPL;
+//
+//	if ( 0x81 == routepacket->Key ) 
+//	{
+//		if( (routepacket->RfRouteData.Orien & 0x0F) != 1 )
+//		{
+//			for (i=0; i<2; i++)
+//			{
+//				// (routepacket->RfRouteData.CRPL-1)*2-2   
+//				// (2-1)*2-2 = 0  (3-1)*2-2 = 2  (4-1)*2-2 =  4 (5-1)*2-2 = 6  (6-1)*2-2 = 8
+//				// 将自身ID加入路由表中
+//				psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2-2+i] = g_module_id.Sn[i];
+//			}	
+//		}
+//	}
+//	else 
+//	{
+//	  if( routedatalength != 0 )
+//	  {
+//	    for(i=0;i<routedatalength;i++)
+//	    	psentrfdata[8+i] = *(routepacket->RfRouteData.pRouteData+i);
+//	  }
+//	}
+//  
+//  // 计算出数据类型后的下标
+//  routeprotocol = routedatalength +2+6;                              // routelength+2+6 = 下一字段下标
+//  psentrfdata[routeprotocol] = routepacket->ProtocolType; 
+//  // 数据段长度
+//  datalength = routepacket->Length - ( routedatalength+2 ) - 4 - 5;     // 传感器数据长度
+//  if( datalength != 0 )
+//  {
+//  	for( i=0;i<datalength;i++ )
+//  		psentrfdata[routeprotocol+5+i] = *(routepacket->pSensorData+i);
+//  }
+//  
+//  psentrfdata[routeprotocol+1] = routepacket->Src.Sn[0];
+//  psentrfdata[routeprotocol+2] = routepacket->Src.Sn[1];
+//  psentrfdata[routeprotocol+3] = routepacket->Des.Sn[0];
+//  psentrfdata[routeprotocol+4] = routepacket->Des.Sn[1];
+//
+//  // routepacket->Length长度没有包含 首字节 校验和 长度字节本身
+//  // 计算校验和
+//	for( i=0;i<routepacket->Length+3;i++ )
+//	{
+//		psentrfdata[routeprotocol+5+datalength] += psentrfdata[i];
+//	}
+//	
+//	//WorCarry[0] = psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2];
+//	//WorCarry[1] = psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2+1];	
+//	// 接收到数据后通过广播转发出去
+//	if ( 0x81 == routepacket->Key ) 
+//	{
+//		// 进行广播唤醒 搜寻路径
+//		WorCarry[0] = WorCarry[1] = 0xFF;	
+//	}
+//	else
+//	{
+//		// 转发数据时，直接取路由中的数据进行唤醒下级
+//		WorCarry[0] = psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2];
+//		WorCarry[1] = psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2+1];
+//	}
+//	
+//	CC1101_Wakeupcarry(WorCarry,2,2);
+//	halRfSendPacket(psentrfdata,routepacket->Length+3);	
+//}
 
 //Bool RfCheckData(INT8U *prfdata,Rf_Route routepacket,INT8U *proutedata,INT8U *pSensorData)
 void RfRouteManage(INT8U *prfdata,Rf_Route* routepacket)
 {
-  INT8U i;
   INT8U routedatalength = 0;
   INT8U routeprotocol = 0;
   INT8U datalength = 0;
+  INT8U	checknum = 0;
+  INT8U i;
   
   routepacket->Pre = prfdata[0]; 
   routepacket->Length = prfdata[1]; 
@@ -228,8 +369,8 @@ void RfRouteManage(INT8U *prfdata,Rf_Route* routepacket)
   routepacket->Gateway.Sn[0] = prfdata[4];
   routepacket->Gateway.Sn[1] = prfdata[5];
   
-  // 对路由数据进行处理
-  routedatalength = (routepacket->RfRouteData.Orien & 0x0F)*2;
+  // 对路由数据进行处理  Orien 由1开始
+  routedatalength = ( (routepacket->RfRouteData.Orien & 0x0F)-1)*2;
   routepacket->RfRouteData.Orien =  prfdata[6];
   routepacket->RfRouteData.CRPL =  prfdata[7];
   // 当路由深度为0时，pRouteData不指向数组
@@ -248,11 +389,15 @@ void RfRouteManage(INT8U *prfdata,Rf_Route* routepacket)
   if( datalength != 0 )
   	routepacket->pSensorData = &prfdata[routeprotocol+5];
 
-// 校验和在RF接收后进行计算 在这儿可以做个赋值后的验证 
-// 	for( i=0;i<routepacket->Length+3;i++ )  
-//	{
-//		psentrfdata[routeprotocol+5+datalength] += psentrfdata[i];
-//	}
+  // 校验和在RF接收后进行计算 在这儿可以做个赋值后的验证 
+ 	for( i=0;i<(routepacket->Length+3);i++ )
+	{
+		// 计算校验和
+		//psentrfdata[routeprotocol+5+datalength] += psentrfdata[i];
+		checknum += prfdata[i];
+		Usart_printf(prfdata+i,1);
+	}
+	
 
 	// g_rid不同才进行数据处理 并且 源地址不同&& g_pre_mcuid.temp!= 
 	if( g_pre_rid != routepacket->Rid || g_pre_src != routepacket->Src.Sn_temp )
@@ -277,7 +422,13 @@ void RfRouteManage(INT8U *prfdata,Rf_Route* routepacket)
 		}
 		else
 		{
-			TransmitDataCommand(routepacket);
+			if( 0x55 == g_getroute )
+			{
+				Log_printf("DirectTransmitDataCommand not ok\n");
+				//DirectTransmitDataCommand(routepacket);
+			}
+			else
+				TransmitDataCommand(routepacket);
 		}
 	}
 	else

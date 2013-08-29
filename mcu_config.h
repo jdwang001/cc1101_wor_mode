@@ -65,6 +65,7 @@ extern INT16U timer;
 extern Module_Sn g_module_id,g_gateway;
 extern INT8U g_1s_counter,g_leng,g_count,g_test_count,g_rf_rx_flag,g_rx_timeout; 
 extern INT8U g_rx_flag;
+extern INT8U g_search;
 extern INT8U TxBuf[64];	 			// 11字节, 如果需要更长的数据包,请正确设置
 extern INT8U RxBuf[64];
 

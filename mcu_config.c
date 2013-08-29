@@ -353,10 +353,13 @@ void uart_isr()  interrupt 4   //´®¿ÚÖÐ¶Ï
 //*****************************************************************************************	
 void timer0_isr()  interrupt 1   //Timer0ÖÐ¶Ï
 {
-	
-	Timer0_Init(1);
+	if( 0x55 == g_search )
+		Timer0_Init(10);
+	else 
+		Timer0_Init(1);
+		
 	timer++;
-	if(timer>=10000)
+	if(timer>=1000)
 	{
 		//g_rx_timeout = 0x55;
 		//g_rf_rx_flag = 0x00;
