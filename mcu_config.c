@@ -87,27 +87,16 @@ void IapEraseSector(INT16U addr)
 //函数名：void IapEraseByte(INT16U addr,INT8U size)  
 //输入：addr：EEPROM地址  size：擦除字节个数
 //输出：1擦除成功 0擦除失败
-//功能描述：按字节擦除
+//功能描述：按字节擦除  将每个字节编程为0xFF，而后应该可以直接写入数据。待验证
 /*****************************************************************************************/  
 INT8U IapEraseByte(INT16U addr,INT8U size)                                 
 {   
 	INT8U i;
-	INT16U addr_temp;
-	
-	addr_temp = addr;
+
 	for(i=0;i<size;i++)
 	{                                                                                                                                                      
-	  IAP_CONTR = ENABLE_IAP;              //Open IAP function, and set wait time                                       
-	  IAP_CMD = CMD_PROGRAM;                 //Set ISP/IAP/EEPROM ERASE command  字节擦除命令                                 
-	  IAP_ADDRL = addr_temp;                    //Set ISP/IAP/EEPROM address low                            
-	  IAP_ADDRH = addr_temp >> 8;               //Set ISP/IAP/EEPROM address high                          
-	  IAP_TRIG = 0x5a;                    //Send trigger command1 (0x5a) 
-	  IAP_TRIG = 0xa5;                     //Send trigger command2 (0xa5)              
-	  _nop_();                           //MCU will hold here until ISP/IAP/EEPROM                                    
-	                                      //operation complete 
-	  addr_temp++;
+		IapProgramByte(addr+i, 0xFF); 
 	}
-  IapIdle(); 
   
   for (i=0; i<size; i++)                         //Check whether all erase data is FF
 	{
@@ -117,17 +106,17 @@ INT8U IapEraseByte(INT16U addr,INT8U size)
 	return 1;
 } 
 /*****************************************************************************************
-//函数名：void IapReadModelSn(INT16U addr) 
-//输入：addr：EEPROM地址
+//函数名：void IapReadModelSn(INT16U addr,Model_Sn* sndata) 
+//输入：addr：EEPROM地址 data: 读出的数据
 //输出：无
-//功能描述：读取设置的Model_Sn addr：MODEL_SN_ADDRESS
+//功能描述：读取EEPROM内的数据
 /*****************************************************************************************/ 
-void IapReadModelSn(INT16U addr)
+void IapReadModelSn(INT16U addr,Module_Sn* sndata)
 {
 	INT8U i;
-	for(i=0;i<size;i++)
+	for(i=0;i<2;i++)
 	{
-		g_module_id.Sn[i] = IapReadByte(addr+i);
+		sndata->Sn[i] = IapReadByte(addr+i);
 	}
 }
 
@@ -206,7 +195,8 @@ void CpuInit(void)
 {	 
 	
     //LED_R = ~LED_R;
-    IapReadModelSn(MODEL_SN_ADDRESS);
+    IapReadModelSn(MODEL_SN_ADDRESS,&g_module_id);
+    IapReadModelSn(GATEWAY_ADDRESS,&g_gateway);
     Timer0_Init(1);
     Int1Init();
    	UART_init();   
@@ -370,7 +360,8 @@ void timer0_isr()  interrupt 1   //Timer0中断
 	{
 		//g_rx_timeout = 0x55;
 		//g_rf_rx_flag = 0x00;
-		g_wor_flag = 0x00;				// 定时时间到，退出全速接收模式
+		//g_wor_flag = 0x00;				// 定时时间到，退出全速接收模式
+		g_enter_rx = 0x00;
 		LED_D3 = ~LED_D3;
 		timer = 0;
 		TIMER0_OFF;								// 关闭定时器

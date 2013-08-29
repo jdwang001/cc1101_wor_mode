@@ -3,6 +3,7 @@
 
 #include "mcu_config.h"
 
+
 #define	F_xosc							26000000L		// RF¾§ÕñÆµÂÊ
 #define WRITE_BURST     		0x40				// Á¬ÐøÐ´
 #define READ_SINGLE     		0x80				// ¶Á

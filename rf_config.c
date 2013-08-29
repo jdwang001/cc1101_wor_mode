@@ -1,4 +1,4 @@
-// Filename:	mcu_config.c
+// Filename:	rf_config.c
 // Function:	rf底层驱动
 // Author:		wzd
 // Date:			2013年8月15日10:21:25
@@ -298,7 +298,7 @@ INT8U halRfReceivePacket(INT8U *rxBuffer, INT8U *length)
         	//Log_printf("rx data  ");
             halSpiReadBurstReg(CCxxx0_RXFIFO, rxBuffer, packetLength); //读出所有接收到的数据
             *length = packetLength;				//把接收数据长度的修改为当前数据的长度
-            
+            //g_rf_receive_flag = 0x55;
             Usart_printf(rxBuffer,packetLength);
 
             // Read the 2 appended status bytes (status[0] = RSSI, status[1] = LQI)
@@ -405,6 +405,7 @@ INT8U halRfRxPacket(INT8U *rxBuffer)
 {
     INT8U status[2],wor_data[2];
     INT8U packetLength=0;
+    INT8U checknum=0,i=0;
     //INT8U i=(*length)*4;  																					// 具体多少要根据datarate和length来决定
 
     halSpiStrobe(CCxxx0_SRX);																					// 进入接收状态
@@ -415,7 +416,7 @@ INT8U halRfRxPacket(INT8U *rxBuffer)
 				delay(100);
 				//Usart_printf(&packetLength,1);
 		
-		if ( packetLength > 2 )	
+			if ( packetLength > 2 )	
 	    {		
 	        halSpiReadBurstReg(CCxxx0_RXFIFO, rxBuffer, packetLength); 	// 读出所有接收到的数据
 	        //*length = packetLength;																		// 把接收数据长度的修改为当前数据的长度
@@ -428,11 +429,24 @@ INT8U halRfRxPacket(INT8U *rxBuffer)
 	        {
 						//TIMER0_OFF;																								// 关闭定时器
 	        	//g_wor_flag = 0x00;																				// 接收到数据后，退出全速接收模式
-	        	Usart_printf(rxBuffer,packetLength);
-	        	halRfSendPacket(Test, 13);																// 应答信息
 	        	
-						LED_D3 = ~LED_D3;
-	        	return packetLength;
+	        	// 计算校验和
+	        	for( i=0;i<packetLength-1;i++)
+	        	{
+							checknum += rxBuffer[i];
+	        	}
+	        	
+		        if ( checknum == rxBuffer[packetLength-1] )
+		        {
+		        	g_enter_rx = 0x00;																					// 收到数据就退出接收模式
+		        	g_rf_rx_flag = 0x55;																				// 而后进入路由数据处理模式
+		        	Usart_printf(rxBuffer,packetLength);
+		        	//halRfSendPacket(Test, 13);																// 应答信息
+							LED_D3 = ~LED_D3;
+		        	return packetLength;
+		        }
+		        else
+		        	return 0;
 	        }
 	        else
 	        {	
@@ -444,7 +458,7 @@ INT8U halRfRxPacket(INT8U *rxBuffer)
       if (packetLength == 2) 																					// 如果所要的有效数据长度等于接收到的数据包的长度
       {
           halSpiReadBurstReg(CCxxx0_RXFIFO, wor_data, packetLength); 	// 读出所有接收到的数据
-					if ( (wor_data[0]==BROADCAST && wor_data[1]==BROADCAST) || ( (wor_data[0]==g_module_id.Sn[0]) && (wor_data[1]==g_module_id.Sn[1]) ) )
+					if ( (wor_data[0]==BROADCAST && wor_data[1]==BROADCAST) || ( (wor_data[0]==(g_module_id.Sn[0]&MCU_ID)) && (wor_data[1]==g_module_id.Sn[1]) ) )
 					//if ( (wor_data[0]==0x55 && wor_data[1]==0xAA) || (wor_data[0]==g_module_id && wor_data[1]==g_module_id>>8) )
 					{
             //Log_printf("Enter wor\n");
@@ -644,7 +658,7 @@ INT8U CC1101_Worwakeup(void)
 	        {
 	            halSpiReadBurstReg(CCxxx0_RXFIFO, wor_data, packetLength); 	//读出所有接收到的数据
 	            //*length = packetLength;																		//把接收数据长度的修改为当前数据的长度
-							if ( (wor_data[0]==BROADCAST && wor_data[1]==BROADCAST) || ( (wor_data[0]==g_module_id.Sn[0]) && (wor_data[1]==g_module_id.Sn[1]) ) )
+							if ( (wor_data[0]==BROADCAST && wor_data[1]==BROADCAST) || ( (wor_data[0] == (g_module_id.Sn[0]&MCU_ID)) && (wor_data[1]==g_module_id.Sn[1]) ) )
 							//if ( (wor_data[0]==0x55 && wor_data[1]==0xAA) || (wor_data[0]==g_module_id && wor_data[1]==g_module_id>>8) )
 							{
 		            //Log_printf("Enter wor\n");
@@ -655,7 +669,8 @@ INT8U CC1101_Worwakeup(void)
 		            {
 		            	
 									halSpiStrobe(CCxxx0_SFRX); 
-									g_wor_flag = 0x55;																		// Wor唤醒置位，之后进入全速接收模式
+									//g_wor_flag = 0x55;																		// Wor唤醒置位，之后进入全速接收模式
+									g_enter_rx = 0x55;
 									
 									timer = 0;
 									Timer0_Init(1);
@@ -750,8 +765,8 @@ void Rf_wakeup() interrupt	2
 	 PCON &= PD_OFF; 
 	 LED_D1 = ~LED_D1; 
 	 
-	 CC1101_Worwakeup();
-	 //g_wor_flag = 0x55;
+	 //CC1101_Worwakeup();
+	 g_wor_flag = 0x55;
 	 
 	 //Log_printf("Enter wor\n");
 	 //INT1_ON;												//2013年8月15日16:22:59

@@ -8,7 +8,8 @@
 #define		INT8U			unsigned char
 #define		INT16U		unsigned int
 #define		INT32U		unsigned long
-#define		F_mcu			11059200L				// MCU晶振频率   
+#define		F_mcu			11059200L				// MCU晶振频率 
+#define   MCU_ID		0x8F  
 #define		PD_ON			0x02
 #define		PD_OFF		0xFD
 #define		G_IT_OFF	EA=0
@@ -17,6 +18,7 @@
 #define		INT1_ON 	EX1=1						// 定义打开INT1中断宏
 #define		TIMER0_OFF TR0=0					// 定时器0停止运行
 #define		TIMER0_ON  TR0=1					// 定时器0开始运行
+
 
 /*Define ISP/IAP/EEPROM command*/ 
 #define  CMD_IDLE          0                 //Stand-By 
@@ -32,7 +34,10 @@
 
 //Start address for STC12C5A60S2 series EEPROM 
 #define   IAP_ADDRESS      0x0000
-#define		MODEL_SN_ADDRESS 0x0000
+#define		SEARCH_MODE			 0x0000
+#define		GATEWAY_ADDRESS	 0x0001
+#define		MODEL_SN_ADDRESS 0x0003
+
 typedef union MODULE_SN{
  INT8U Sn[2];
  INT16U Sn_temp;
@@ -55,9 +60,9 @@ sbit LED_D2	=	P2^1;
 sbit LED_D3 = P2^2;
 sbit LED_D4	=	P2^3;
 
-extern INT8U g_wor_flag;
+extern INT8U g_wor_flag,g_enter_rx;
 extern INT16U timer;
-extern Module_Sn g_module_id;
+extern Module_Sn g_module_id,g_gateway;
 extern INT8U g_1s_counter,g_leng,g_count,g_test_count,g_rf_rx_flag,g_rx_timeout; 
 extern INT8U g_rx_flag;
 extern INT8U TxBuf[64];	 			// 11字节, 如果需要更长的数据包,请正确设置
@@ -67,7 +72,8 @@ void IapIdle();
 INT8U IapReadByte(INT16U addr); 
 void IapProgramByte(INT16U addr, INT8U dat); 
 void IapEraseSector(INT16U addr); 
-void IapReadModelSn(INT16U addr);
+INT8U IapEraseByte(INT16U addr,INT8U size);
+void IapReadModelSn(INT16U addr,Module_Sn* sndata);
 void Int1Init(void);
 void SpiInit(void);
 void CpuInit(void);
