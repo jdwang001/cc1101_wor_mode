@@ -24,9 +24,10 @@ INT8U RfRecBuf[64];
 Rf_Route rf_route_data;
 INT16U g_pre_src;
 //INT8U	Test[20] = "Send Packet";
-//AA 0B 81 01 51 01 00 00 01 00 01 00 00 8B
 // 路由申请命令
-INT8U SearchData[14] = {0xAA,0x0B,0x81,0x01,0x51,0x01,0x00,0x00,0x01,0x00,0x00,0x00,0x00,0x00};
+// Orien
+// AA 0B 01 81 10 01   51 01 01    00 01  10 01   FD
+INT8U SearchData[14] = {0xAA,0x0B,0x01,0x81,0x10,0x01,0x51,0x01,0x01,0x00,0x01,0x10,0x01,0x00};
 //***************更多功率参数设置可详细参考DATACC1100英文文档中第48-49页的参数表******************
 //INT8U PaTabel[8] = {0x04 ,0x04 ,0x04 ,0x04 ,0x04 ,0x04 ,0x04 ,0x04};  //-30dBm   功率最小
 //INT8U PaTabel[8] = {0x60 ,0x60 ,0x60 ,0x60 ,0x60 ,0x60 ,0x60 ,0x60};  //0dBm
@@ -112,7 +113,7 @@ void main()
     halRfWriteRfSettings();
     halSpiWriteBurstReg(CCxxx0_PATABLE, PaTabel, 8);
 		CC1101_Setwor();
-   	Log_printf("initialization ok\n");
+//   	Log_printf("initialization ok\n");
     G_IT_ON;															// 开启单片机全局中断
 		
 		// 上电设置网关
@@ -122,20 +123,28 @@ void main()
     	if( 0x55 == g_rx_flag )
     	{
     			g_rx_flag = 0x00;
-    			if( IapEraseByte(GATEWAY_ADDRESS,2) )
+    			if( IapCheckEEPROM(GATEWAY_ADDRESS,2) )
 					{
 						// 将网关数据写入
 						IapProgramByte(GATEWAY_ADDRESS,TxBuf[1]);
 						IapProgramByte(GATEWAY_ADDRESS+1,TxBuf[2]);
 						g_gateway.Sn_temp = IapReadByte(GATEWAY_ADDRESS);
 					}
+					else
+					{
+						Log_printf("GATEWAY OK\n");	
+					}
 					
-					if( IapEraseByte(MODEL_SN_ADDRESS,2) )
+					if( IapCheckEEPROM(MODEL_SN_ADDRESS,2) )
 					{
 						// 将地址数据写入
 						IapProgramByte(MODEL_SN_ADDRESS,TxBuf[3]);
 						IapProgramByte(MODEL_SN_ADDRESS+1,TxBuf[4]);
 						g_module_id.Sn_temp = IapReadByte(MODEL_SN_ADDRESS);
+					}
+					else
+					{
+						Log_printf("MODEL_SN OK\n");
 					}
     	}
     }
@@ -148,20 +157,21 @@ void main()
     Usart_printf(&g_gateway.Sn[0],1);
     Usart_printf(&g_gateway.Sn[1],1);
     Log_printf("\r\n");
+   	Log_printf("initialization ok\n");
 
     // 地址网关设置完成
     LED_D2 = ~LED_D2;
-    // 读出搜索模式 为0 则不进行搜索
+    // 读出搜索模式 首次上电为0xFF 则进行搜索
     g_getroute = IapReadByte(SEARCH_MODE);
-		if( 0x55 != g_getroute )
+		if( 0xFF == g_getroute )
 		{
 SearchMode:
 	  	while( search_temp-- != 0 )
 	  	{
-	  		SearchData[3] = g_rid;
+	  		SearchData[2] = g_rid;
 	  		// 网关地址
-	  		SearchData[6] = g_gateway.Sn[0];
-	  		SearchData[7] = g_gateway.Sn[1];
+	  		SearchData[4] = g_gateway.Sn[0];
+	  		SearchData[5] = g_gateway.Sn[1];
 				// 源地址(模块ID)
 	  		SearchData[9]  = g_module_id.Sn[0];
 	  		SearchData[10] = g_module_id.Sn[1];
@@ -184,6 +194,7 @@ SearchMode:
 				TIMER0_ON;	
 				g_search = 0x55;
 				g_enter_rx = 0x55;
+				// 存放校验和
 				SearchData[13] = 0x00;
 				goto EnterRx;
 	  	}	
@@ -291,4 +302,5 @@ EnterRx:
 //          //P1 &= 0x7f;                                   //0xxx,xxxx IAP operation fail 
 //          Log_printf("Error EEPROM");
 //          while (1); 
+//
 // } 

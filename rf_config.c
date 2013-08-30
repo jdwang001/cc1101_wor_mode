@@ -430,30 +430,38 @@ INT8U halRfRxPacket(INT8U *rxBuffer)
 						//TIMER0_OFF;																								// 关闭定时器
 	        	//g_wor_flag = 0x00;																				// 接收到数据后，退出全速接收模式
 	        	
-	        	// 计算校验和
-	        	for( i=0;i<packetLength-1;i++)
+	        	if( 0xAA != rxBuffer[1])
 	        	{
-							checknum += rxBuffer[i];
-	        	}
-	        	
-		        if ( checknum == rxBuffer[packetLength-1] )
-		        {
-		        	g_enter_rx = 0x00;																					// 收到数据就退出接收模式
-		        	g_rf_rx_flag = 0x55;																				// 而后进入路由数据处理模式
-		        	Usart_printf(rxBuffer,packetLength);
-		        	//halRfSendPacket(Test, 13);																// 应答信息
-							LED_D3 = ~LED_D3;
-		        	return packetLength;
-		        }
-		        else
-		        {
-		        	Log_printf("Error protocol\n");
-		        	return 0;
-		        }
+	        	// 计算校验和
+		        	for( i=0;i<packetLength-1;i++)
+		        	{
+								checknum += rxBuffer[i];
+		        	}
+		        	
+			        if ( checknum == rxBuffer[packetLength-1] )
+			        {
+			        	//Log_printf("Check ok\n");
+			        	g_enter_rx = 0x00;																					// 收到数据就退出接收模式
+			        	g_rf_rx_flag = 0x55;																				// 而后进入路由数据处理模式
+			        	//Usart_printf(rxBuffer,packetLength);
+								LED_D3 = ~LED_D3;
+			        	return packetLength;
+			        }
+			        else
+			        {
+			        	Usart_printf(rxBuffer,packetLength);
+			        	Log_printf("Error check\n");
+			        	return 0;
+			        }
+			      }
+			      else 
+			      {
+			      	Log_printf("Error protocol");
+			      }
 	        }
 	        else
 	        {	
-	        	Log_printf("3 and crc\n");
+	        	Log_printf("CRC error\n");
 	        	return 0;
 					}
 	    }

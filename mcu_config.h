@@ -33,10 +33,11 @@
 //#define  ENABLE_IAP      0x83              //if SYSCLK<12MHz 
 
 //Start address for STC12C5A60S2 series EEPROM 
-#define   IAP_ADDRESS      0x0000
-#define		SEARCH_MODE			 0x0000
-#define		GATEWAY_ADDRESS	 0x0001
-#define		MODEL_SN_ADDRESS 0x0003
+#define   IAP_ADDRESS      	0x0000
+#define		SEARCH_MODE			 	0x0000
+#define		GATEWAY_ADDRESS	 	0x0200
+#define		MODEL_SN_ADDRESS 	0x0400
+#define		ROUTEDATA_ADDRESS 0x0500
 
 typedef union MODULE_SN{
  INT8U Sn[2];
@@ -71,9 +72,10 @@ extern INT8U RxBuf[64];
 
 void IapIdle(); 
 INT8U IapReadByte(INT16U addr); 
+void IapRead2Array(INT16U addr,INT8U* arraydata,INT8U size);
 void IapProgramByte(INT16U addr, INT8U dat); 
 void IapEraseSector(INT16U addr); 
-INT8U IapEraseByte(INT16U addr,INT8U size);
+INT8U IapCheckEEPROM(INT16U addr,INT8U size);
 void IapReadModelSn(INT16U addr,Module_Sn* sndata);
 void Int1Init(void);
 void SpiInit(void);

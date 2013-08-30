@@ -74,7 +74,10 @@ void AckARL(Rf_Route* routepacket,INT8U* psentrfdata)
 	WorCarry[0] = psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2];
 	WorCarry[1] = psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2+1];
 	
-	CC1101_Wakeupcarry(WorCarry,2,2);
+	// 不是第一级路由则必须发送唤醒波
+	if( 1 != routepacket->RfRouteData.CRPL )
+		CC1101_Wakeupcarry(WorCarry,2,2);
+	
 	halRfSendPacket(psentrfdata,routepacket->Length+3);
 	g_rid++;
 }
@@ -196,43 +199,96 @@ void test(Rf_Route* routepacket,INT8U* psentrfdata)
 void AssignRouteLevel(Rf_Route* routepacket,INT8U routesize)
 {
   INT8U i;
+  INT8U eepromdata[20];
   INT8U *proutedata = routepacket->RfRouteData.pRouteData	;
-  
-  // 存储搜索到路由标识
-  if ( IapEraseByte(SEARCH_MODE,0x55) )
-  	IapProgramByte(SEARCH_MODE,0);			
+  // 修改搜索模式
+	if ( IapCheckEEPROM(SEARCH_MODE,1) )
+	{
+		IapProgramByte(SEARCH_MODE,0x00);	
+	}
   g_getroute = IapReadByte(SEARCH_MODE);
   g_search = 0x00;
-  //g_enter_rx = 0x00;																						// 搜寻到路径后，防止进入Rx循环
-  
-  // EEPROM中0x0000字节开始存储搜索模式，模块ID
-	if( IapEraseByte(MODEL_SN_ADDRESS,2) )
-	{
-		// 将具有路由级别的模块ID写入RRPROM
+
+  // 修改模块ID
+  if ( IapCheckEEPROM(MODEL_SN_ADDRESS,2) )
+  {
+		IapProgramByte(MODEL_SN_ADDRESS,routepacket->Des.Sn[0]);
+		IapProgramByte(MODEL_SN_ADDRESS+1,routepacket->Des.Sn[1]);  	
+  }
+  else
+  {
+  	IapEraseSector(MODEL_SN_ADDRESS);	
 		IapProgramByte(MODEL_SN_ADDRESS,routepacket->Des.Sn[0]);
 		IapProgramByte(MODEL_SN_ADDRESS+1,routepacket->Des.Sn[1]);
-		
-		if( routesize != 0 )
-		{	
+  }
+
+	if( routesize != 0 )
+	{	
+		if ( IapCheckEEPROM(ROUTEDATA_ADDRESS,512) )
+		{
 			// 写入路由字节长度
-			IapProgramByte(MODEL_SN_ADDRESS+2,routesize);
+			IapProgramByte(ROUTEDATA_ADDRESS,routesize);
 			// 写入路由数据
 			for(i=0;i<routesize;i++)
 			{
-				IapProgramByte(MODEL_SN_ADDRESS+i+3,*(proutedata++));
+				IapProgramByte(ROUTEDATA_ADDRESS+i+1,*(proutedata++));
 			}
 		}
-		// 0x82		终端响应基站分配路由级别命令
-		routepacket->Key = 0x82;
-		// 将数据存储到EEPROM中后，发送响应信息
-		AckARL(routepacket,RfSentBuf);
+		else
+		{
+			IapEraseSector(ROUTEDATA_ADDRESS);	
+			// 写入路由字节长度
+			IapProgramByte(ROUTEDATA_ADDRESS+2,routesize);
+			// 写入路由数据
+			for(i=0;i<routesize;i++)
+			{
+				IapProgramByte(ROUTEDATA_ADDRESS+i+1,*(proutedata++));
+			}			
+		}
 	}
-	else
-		Log_printf("Read ID Error\n");  
-  // 
-  // = (routelevel<<4) | routepacket.Des.Sn[0]; // 将路由深度存储到模块ID中，建议下面有个写EEPROM的操作函数
-  // WirteEeprom();
-  // 将模块ID写回到EEPROM中，并存储此条路由信息
+	// 0x82		终端响应基站分配路由级别命令
+	routepacket->Key = 0x82;
+	// 将数据存储到EEPROM中后，发送响应信息
+	AckARL(routepacket,RfSentBuf);
+//  // 2013年8月30日10:21:13
+//  // 此处应该有个判断功能，防止重复擦写EEPROM
+//  // 存储搜索到路由标识
+//  if ( IapEraseByte(SEARCH_MODE,1) )
+//  	IapProgramByte(SEARCH_MODE,0);			
+//  g_getroute = IapReadByte(SEARCH_MODE);
+//  g_search = 0x00;
+//  //g_enter_rx = 0x00;																						// 搜寻到路径后，防止进入Rx循环
+// 
+// 
+//  
+//  // EEPROM中0x0000字节开始存储搜索模式，模块ID
+//	if( IapEraseByte(MODEL_SN_ADDRESS,2) )
+//	{
+//		// 将具有路由级别的模块ID写入RRPROM
+//		IapProgramByte(MODEL_SN_ADDRESS,routepacket->Des.Sn[0]);
+//		IapProgramByte(MODEL_SN_ADDRESS+1,routepacket->Des.Sn[1]);
+//		
+//		if( routesize != 0 )
+//		{	
+//			// 写入路由字节长度
+//			IapProgramByte(MODEL_SN_ADDRESS+2,routesize);
+//			// 写入路由数据
+//			for(i=0;i<routesize;i++)
+//			{
+//				IapProgramByte(MODEL_SN_ADDRESS+i+3,*(proutedata++));
+//			}
+//		}
+//		// 0x82		终端响应基站分配路由级别命令
+//		routepacket->Key = 0x82;
+//		// 将数据存储到EEPROM中后，发送响应信息
+//		AckARL(routepacket,RfSentBuf);
+//	}
+//	else
+//		Log_printf("Read ID Error\n");  
+//  // 
+//  // = (routelevel<<4) | routepacket.Des.Sn[0]; // 将路由深度存储到模块ID中，建议下面有个写EEPROM的操作函数
+//  // WirteEeprom();
+//  // 将模块ID写回到EEPROM中，并存储此条路由信息
 }
 
 
@@ -369,13 +425,13 @@ void RfRouteManage(INT8U *prfdata,Rf_Route* routepacket)
   routepacket->Gateway.Sn[0] = prfdata[4];
   routepacket->Gateway.Sn[1] = prfdata[5];
   
-  // 对路由数据进行处理  Orien 由1开始
+  // 对路由数据进行处理  Orien 由1开始 0101 xxxx 为终端到基站
   routedatalength = ( (routepacket->RfRouteData.Orien & 0x0F)-1)*2;
   routepacket->RfRouteData.Orien =  prfdata[6];
   routepacket->RfRouteData.CRPL =  prfdata[7];
   // 当路由深度为0时，pRouteData不指向数组
   if( routedatalength != 0 )
-    routepacket->RfRouteData.pRouteData = &prfdata[8];     // 应该将数据放到传入的
+    routepacket->RfRouteData.pRouteData = &prfdata[8];     					 // 应该将数据放到传入的
   // 计算出数据类型后的下标
   routeprotocol = routedatalength +2+6;                              // routelength+2+6 = 下一字段下标
   routepacket->ProtocolType = prfdata[routeprotocol]; 
@@ -385,10 +441,11 @@ void RfRouteManage(INT8U *prfdata,Rf_Route* routepacket)
   routepacket->Des.Sn[0] = prfdata[routeprotocol+3];
   routepacket->Des.Sn[1] = prfdata[routeprotocol+4];
   // 数据段长度
-  datalength = routepacket->Length - ( routedatalength+2 ) - 4 - 5;     // 传感器数据长度
+  datalength = routepacket->Length - ( routedatalength+2 ) - 4 - 5;  // 传感器数据长度
   if( datalength != 0 )
   	routepacket->pSensorData = &prfdata[routeprotocol+5];
 
+  Log_printf("Enter route\n");
   // 校验和在RF接收后进行计算 在这儿可以做个赋值后的验证 
  	for( i=0;i<(routepacket->Length+3);i++ )
 	{
@@ -397,7 +454,6 @@ void RfRouteManage(INT8U *prfdata,Rf_Route* routepacket)
 		checknum += prfdata[i];
 		Usart_printf(prfdata+i,1);
 	}
-	
 
 	// g_rid不同才进行数据处理 并且 源地址不同&& g_pre_mcuid.temp!= 
 	if( g_pre_rid != routepacket->Rid || g_pre_src != routepacket->Src.Sn_temp )
@@ -413,6 +469,9 @@ void RfRouteManage(INT8U *prfdata,Rf_Route* routepacket)
 		    case 0x01:  
 		    	AssignRouteLevel(routepacket,routedatalength);
 		    	break;
+		    case 0x03:
+		    	AckARL(routepacket,RfSentBuf);
+		    	break;
 		    //case 0x81:  ACKARL(routepacket);
 		    //case 0x82:  ACKTDC(routepacket);break;
 		    default : 
@@ -422,12 +481,12 @@ void RfRouteManage(INT8U *prfdata,Rf_Route* routepacket)
 		}
 		else
 		{
-			if( 0x55 == g_getroute )
-			{
-				Log_printf("DirectTransmitDataCommand not ok\n");
-				//DirectTransmitDataCommand(routepacket);
-			}
-			else
+//			if( 0x00 == g_getroute )
+//			{
+//				Log_printf("DirectTransmitDataCommand not ok\n");
+//				//DirectTransmitDataCommand(routepacket);
+//			}
+//			else
 				TransmitDataCommand(routepacket);
 		}
 	}

@@ -1,4 +1,4 @@
-// Filename:	mcu_config.c
+	// Filename:	mcu_config.c
 // Function:	rf底层驱动
 // Author:		wzd
 // Date:			2013年8月15日10:21:25
@@ -83,21 +83,16 @@ void IapEraseSector(INT16U addr)
   IapIdle(); 
 }
 
-/*****************************************************************************************
-//函数名：void IapEraseByte(INT16U addr,INT8U size)  
-//输入：addr：EEPROM地址  size：擦除字节个数
-//输出：1擦除成功 0擦除失败
-//功能描述：按字节擦除  将每个字节编程为0xFF，而后应该可以直接写入数据。待验证
-/*****************************************************************************************/  
-INT8U IapEraseByte(INT16U addr,INT8U size)                                 
+///*****************************************************************************************
+////函数名：void IapEraseByte(INT16U addr,INT8U size)  
+////输入：addr：EEPROM地址  size：擦除字节个数
+////输出：1擦除成功 0擦除失败
+////功能描述：按字节擦除  将每个字节编程为0xFF，而后应该可以直接写入数据。待验证
+///*****************************************************************************************/  
+INT8U IapCheckEEPROM(INT16U addr,INT8U size)                                 
 {   
 	INT8U i;
 
-	for(i=0;i<size;i++)
-	{                                                                                                                                                      
-		IapProgramByte(addr+i, 0xFF); 
-	}
-  
   for (i=0; i<size; i++)                         //Check whether all erase data is FF
 	{
 		if (IapReadByte(addr+i) != 0xff)
@@ -105,6 +100,7 @@ INT8U IapEraseByte(INT16U addr,INT8U size)
 	}
 	return 1;
 } 
+
 /*****************************************************************************************
 //函数名：void IapReadModelSn(INT16U addr,Model_Sn* sndata) 
 //输入：addr：EEPROM地址 data: 读出的数据
@@ -117,6 +113,21 @@ void IapReadModelSn(INT16U addr,Module_Sn* sndata)
 	for(i=0;i<2;i++)
 	{
 		sndata->Sn[i] = IapReadByte(addr+i);
+	}
+}
+
+/*****************************************************************************************
+//函数名：void IapRead2Array(INT16U addr,INT8U* arraydata,INT8U size) 
+//输入：addr：EEPROM地址 arraydata: 数据存放到数组中 size：数据个数
+//输出：无
+//功能描述：读取EEPROM内的数据并存放到数组中
+/*****************************************************************************************/ 
+void IapRead2Array(INT16U addr,INT8U* arraydata,INT8U size)
+{
+	INT8U i;
+	for(i=0;i<size;i++)
+	{
+		arraydata[i] = IapReadByte(addr+i);
 	}
 }
 
@@ -365,7 +376,7 @@ void timer0_isr()  interrupt 1   //Timer0中断
 		//g_rf_rx_flag = 0x00;
 		//g_wor_flag = 0x00;				// 定时时间到，退出全速接收模式
 		g_enter_rx = 0x00;
-		LED_D3 = ~LED_D3;
+		//LED_D3 = ~LED_D3;
 		timer = 0;
 		TIMER0_OFF;								// 关闭定时器
 	}
