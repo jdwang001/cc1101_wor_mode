@@ -208,7 +208,7 @@ SearchMode:
   	
     while (1)
     {
-    	Log_printf("Enter wor\n");
+    	//Log_printf("Enter wor\n");
 			if( 0x55 == g_wor_flag )
 			{
 				CC1101_Worwakeup();
@@ -231,7 +231,7 @@ EnterRx:
 			halSpiStrobe(CCxxx0_SWOR);						// 启动WOR	
 			INT1_ON;															// 开外部中断
 			PCON |= PD_ON;												// 从掉电模式唤醒后，程序从这行开市			
-			Log_printf("Exit pd\n");
+			//Log_printf("Exit pd\n");
     }	
     
 //    while (1)
