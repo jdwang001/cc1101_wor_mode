@@ -779,7 +779,7 @@ void Rf_wakeup() interrupt	2
 	 //CC1101_Worwakeup();
 	 g_wor_flag = 0x55;
 	 
-	 Log_printf("Enter INT1\n");
+	 //Log_printf("Enter INT1\n");
 	 //INT1_ON;												//2013Äê8ÔÂ15ÈÕ16:22:59
 }
 

@@ -101,13 +101,13 @@ void main()
     
     CpuInit();
     //验证读取的MCUSN
-    Log_printf("MCUSN:");
-    Usart_printf(&g_module_id.Sn[0],1);
-    Usart_printf(&g_module_id.Sn[1],1);
-    Log_printf("GateWay:");
-    Usart_printf(&g_gateway.Sn[0],1);
-    Usart_printf(&g_gateway.Sn[1],1);
-    Log_printf("\r\n");
+//    Log_printf("MCUSN:");
+//    Usart_printf(&g_module_id.Sn[0],1);
+//    Usart_printf(&g_module_id.Sn[1],1);
+//    Log_printf("GateWay:");
+//    Usart_printf(&g_gateway.Sn[0],1);
+//    Usart_printf(&g_gateway.Sn[1],1);
+//    Log_printf("\r\n");
     
     POWER_UP_RESET_CC1100();
     halRfWriteRfSettings();
@@ -120,6 +120,8 @@ void main()
     // 只有外部中断没有打开，现在进行设置网关字节 地址和网管不能为全0xFFFF
     while( ( 0xFFFF == g_gateway.Sn_temp ) || ( 0xFFFF == g_module_id.Sn_temp ) )
     {
+    	LED_D4 = ~LED_D4;
+    	delay(50000);
     	if( 0x55 == g_rx_flag )
     	{
     			g_rx_flag = 0x00;
@@ -128,7 +130,7 @@ void main()
 						// 将网关数据写入
 						IapProgramByte(GATEWAY_ADDRESS,TxBuf[1]);
 						IapProgramByte(GATEWAY_ADDRESS+1,TxBuf[2]);
-						g_gateway.Sn_temp = IapReadByte(GATEWAY_ADDRESS);
+						//g_gateway.Sn_temp = IapReadByte(GATEWAY_ADDRESS);
 					}
 					else
 					{
@@ -140,24 +142,26 @@ void main()
 						// 将地址数据写入
 						IapProgramByte(MODEL_SN_ADDRESS,TxBuf[3]);
 						IapProgramByte(MODEL_SN_ADDRESS+1,TxBuf[4]);
-						g_module_id.Sn_temp = IapReadByte(MODEL_SN_ADDRESS);
+						//g_module_id.Sn_temp = IapReadByte(MODEL_SN_ADDRESS);
 					}
 					else
 					{
 						Log_printf("MODEL_SN OK\n");
 					}
+					LED_D4 = 0;
     	}
     }
-    Log_printf("Set ok\n");
+//    Log_printf("Set ok\n");
     IapReadModelSn(MODEL_SN_ADDRESS,&g_module_id);
     IapReadModelSn(GATEWAY_ADDRESS,&g_gateway);
+    g_pre_src = g_module_id.Sn_temp;
     Usart_printf(&g_module_id.Sn[0],1);
     Usart_printf(&g_module_id.Sn[1],1);
-    Log_printf("GateWay:");
+    //Log_printf("GateWay:");
     Usart_printf(&g_gateway.Sn[0],1);
     Usart_printf(&g_gateway.Sn[1],1);
     Log_printf("\r\n");
-   	Log_printf("initialization ok\n");
+   	Log_printf("0 initialization ok\n");
 
     // 地址网关设置完成
     LED_D2 = ~LED_D2;
