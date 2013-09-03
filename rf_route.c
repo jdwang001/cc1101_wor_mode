@@ -13,21 +13,21 @@ INT8U RidSrcCheck(Rf_Route* routepacket)
 	// 收到自身发出的数据，直接返回
 	if( routepacket->Src.Sn_temp == g_module_id.Sn_temp )
 	{
-		//Log_printf("is me sent\r\n");
+		Log_printf("is me sent\r\n");
 		return 0;
 	}
 	
 	// g_rid不同才进行数据处理 并且 源地址不同&& g_pre_mcuid.temp!= 
 	if( g_pre_rid != routepacket->Rid || g_pre_src != routepacket->Src.Sn_temp )
 	{
-		//Log_printf("get data\r\n");
+		Log_printf("get data\r\n");
 		g_pre_rid = routepacket->Rid;
 		g_pre_src = routepacket->Src.Sn_temp;
 		return 1;
 	}
 	else
 	{
-		//Log_printf("rid equal\r\n");	
+		Log_printf("rid equal\r\n");	
 		return 0;
 	}
 }
@@ -154,27 +154,34 @@ void test(Rf_Route* routepacket,INT8U* psentrfdata)
   psentrfdata[4] = routepacket->Gateway.Sn[0];
   psentrfdata[5] = routepacket->Gateway.Sn[1];
   
+//  if( 0x81 == routepacket->Key )
+//  	routepacket->RfRouteData.Orien++;		// 在搜寻路由传输给基站时自增1
+//	psentrfdata[6] = routepacket->RfRouteData.Orien;
   if( 0x81 == routepacket->Key )
-  	routepacket->RfRouteData.Orien++;		// 在搜寻路由传输给基站时自增1
-	psentrfdata[6] = routepacket->RfRouteData.Orien;
+  	psentrfdata[6] =	routepacket->RfRouteData.Orien+1;		// 在搜寻路由传输给基站时自增1
+  else
+		psentrfdata[6] = routepacket->RfRouteData.Orien;
 	
 	// key最高位为1，由终端到基站 CRPL++
+//	if ( routepacket->Key&0x80)
+//		routepacket->RfRouteData.CRPL++;
+//	else
+//		routepacket->RfRouteData.CRPL--;
 	if ( routepacket->Key&0x80)
-		routepacket->RfRouteData.CRPL++;
+		psentrfdata[7] = routepacket->RfRouteData.CRPL+1;
 	else
-		routepacket->RfRouteData.CRPL--;
-			
-  psentrfdata[7] = routepacket->RfRouteData.CRPL;
+		psentrfdata[7] = routepacket->RfRouteData.CRPL-1;		
+  //psentrfdata[7] = routepacket->RfRouteData.CRPL;
 
   // 对路由数据进行处理Orien为1 时  CRPL为1
   //routedatalength = ( (routepacket->RfRouteData.Orien & 0x0F)-1 )*2;
-  routedatalength = ( (routepacket->RfRouteData.Orien & 0x0F)-1 )*2;
+  routedatalength = ( (psentrfdata[6] & 0x0F)-1 )*2;
   
   //Usart_printf(&routedatalength,1);
   
 	if ( 0x81 == routepacket->Key ) 
 	{
-		if( (routepacket->RfRouteData.Orien & 0x0F) != 1 )
+		if( (psentrfdata[6] & 0x0F) != 1 )
 		{
 			//Log_printf("  route  ");
 			for (i=0; i<2; i++)
@@ -182,8 +189,8 @@ void test(Rf_Route* routepacket,INT8U* psentrfdata)
 				// (routepacket->RfRouteData.CRPL-1)*2-2   
 				// (2-1)*2-2 = 0  (3-1)*2-2 = 2  (4-1)*2-2 =  4 (5-1)*2-2 = 6  (6-1)*2-2 = 8
 				// 将自身ID加入路由表中
-				psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2-2+i] = g_module_id.Sn[i];
-				//Usart_printf(&psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2-2+i],1);
+				psentrfdata[8+(psentrfdata[7]-1)*2-2+i] = g_module_id.Sn[i];
+				//Usart_printf(&psentrfdata[8+(psentrfdata[7]-1)*2-2+i],1);
 			}	
 			//Log_printf("  ");
 		}
@@ -204,7 +211,11 @@ void test(Rf_Route* routepacket,INT8U* psentrfdata)
 			psentrfdata[1] = routepacket->Length = routepacket->Length+2;
 			
   // 计算出数据类型后的下标
-  routeprotocol = routedatalength +2+6;                              // routelength+2+6 = 下一字段下标
+//  if ( 0x81 == routepacket->Key)
+//  	routeprotocol = 
+//  else
+  	routeprotocol = routedatalength +2+6;                              // routelength+2+6 = 下一字段下标
+  
   psentrfdata[routeprotocol] = routepacket->ProtocolType; 
   // 协议类型后跟着目的地址
   psentrfdata[routeprotocol+1] = routepacket->Src.Sn[0];
@@ -241,12 +252,14 @@ void test(Rf_Route* routepacket,INT8U* psentrfdata)
 	else
 	{
 		// 转发数据时，直接取路由中的数据进行唤醒下级
-		WorCarry[0] = psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2];
-		WorCarry[1] = psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2+1];
+		WorCarry[0] = psentrfdata[8+(psentrfdata[7]-1)*2];
+		WorCarry[1] = psentrfdata[8+(psentrfdata[7]-1)*2+1];
 	}
 	
 	CC1101_Wakeupcarry(WorCarry,2,2);
 	halRfSendPacket(psentrfdata,routepacket->Length+3);
+	Log_printf(" END ");
+	Usart_printf(&routepacket->ProtocolType,1);
 }
 
 // routesize 为路由数据长度
@@ -453,6 +466,7 @@ void RfRouteManage(INT8U *prfdata,Rf_Route* routepacket)
   // 计算出数据类型后的下标
   routeprotocol = routedatalength +2+6;                              // routelength+2+6 = 下一字段下标
   routepacket->ProtocolType = prfdata[routeprotocol]; 
+
   // 模块ID
   routepacket->Src.Sn[0] = prfdata[routeprotocol+1];
   routepacket->Src.Sn[1] = prfdata[routeprotocol+2];
@@ -463,7 +477,7 @@ void RfRouteManage(INT8U *prfdata,Rf_Route* routepacket)
   if( datalength != 0 )
   	routepacket->pSensorData = &prfdata[routeprotocol+5];
 
-  Log_printf("  RD    ");
+  //Log_printf("  RD    ");
   // 校验和在RF接收后进行计算 在这儿可以做个赋值后的验证 
   //	routepacket->Length+3为全部长度
  	for( i=0;i<(routepacket->Length+2);i++ )
@@ -476,12 +490,13 @@ void RfRouteManage(INT8U *prfdata,Rf_Route* routepacket)
 	Usart_printf(&checknum,1);
 	Log_printf("    ");
 
+	// 注释掉 为了测试
 	if(RidSrcCheck(routepacket))
 	{
-		Log_printf("  0001  ");
+		//Log_printf("  0001  ");
 		if( IsMe(routepacket) )
 		{
-			Log_printf("  0002  ");
+			//Log_printf("  0002  ");
 		  //Key 命令字为0x01时 为分配路由级别命令 命令字为0x02时，为传输数据命令
 		  switch( routepacket->Key )    
 		  { // 申请路由协议时
@@ -500,7 +515,7 @@ void RfRouteManage(INT8U *prfdata,Rf_Route* routepacket)
 		}
 		else
 		{
-			Log_printf("  0003  ");
+			//Log_printf("  0003  ");
 //			if( 0x00 == g_getroute )
 //			{
 //				Log_printf("DirectTransmitDataCommand not ok\n");
