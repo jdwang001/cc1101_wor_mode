@@ -23,6 +23,8 @@ INT8U RfSentBuf[64];
 INT8U RfRecBuf[64];
 Rf_Route rf_route_data;
 INT16U g_pre_src;
+INT8U g_module_rpl = 0x01;
+INT8U g_route_size = 0x00;
 //INT8U	Test[20] = "Send Packet";
 // 路由申请命令
 // Orien
@@ -100,20 +102,10 @@ void main()
     INT8U search_temp = 0x03;
     
     CpuInit();
-    //验证读取的MCUSN
-//    Log_printf("MCUSN:");
-//    Usart_printf(&g_module_id.Sn[0],1);
-//    Usart_printf(&g_module_id.Sn[1],1);
-//    Log_printf("GateWay:");
-//    Usart_printf(&g_gateway.Sn[0],1);
-//    Usart_printf(&g_gateway.Sn[1],1);
-//    Log_printf("\r\n");
-    
     POWER_UP_RESET_CC1100();
     halRfWriteRfSettings();
     halSpiWriteBurstReg(CCxxx0_PATABLE, PaTabel, 8);
 		CC1101_Setwor();
-//   	Log_printf("initialization ok\n");
     G_IT_ON;															// 开启单片机全局中断
 		
 		// 上电设置网关
@@ -124,44 +116,34 @@ void main()
     	delay(50000);
     	if( 0x55 == g_rx_flag )
     	{
-    			g_rx_flag = 0x00;
-    			if( IapCheckEEPROM(GATEWAY_ADDRESS,2) )
-					{
-						// 将网关数据写入
-						IapProgramByte(GATEWAY_ADDRESS,TxBuf[1]);
-						IapProgramByte(GATEWAY_ADDRESS+1,TxBuf[2]);
-						//g_gateway.Sn_temp = IapReadByte(GATEWAY_ADDRESS);
-					}
-					else
-					{
-						Log_printf("GATEWAY OK\n");	
-					}
-					
-					if( IapCheckEEPROM(MODEL_SN_ADDRESS,2) )
-					{
-						// 将地址数据写入
-						IapProgramByte(MODEL_SN_ADDRESS,TxBuf[3]);
-						IapProgramByte(MODEL_SN_ADDRESS+1,TxBuf[4]);
-						//g_module_id.Sn_temp = IapReadByte(MODEL_SN_ADDRESS);
-					}
-					else
-					{
-						Log_printf("MODEL_SN OK\n");
-					}
-					LED_D4 = 0;
+  			g_rx_flag = 0x00;
+				// 将网关数据写入
+				IapProgramByte(GATEWAY_ADDRESS,TxBuf[1]);
+				IapProgramByte(GATEWAY_ADDRESS+1,TxBuf[2]);
+				Log_printf("GATEWAY OK\n");				
+				//g_gateway.Sn_temp = IapReadByte(GATEWAY_ADDRESS);
+
+				// 将地址数据写入
+				IapProgramByte(MODEL_SN_ADDRESS,TxBuf[3]);
+				IapProgramByte(MODEL_SN_ADDRESS+1,TxBuf[4]);
+				Log_printf("MODEL_SN OK\n");
+				//g_module_id.Sn_temp = IapReadByte(MODEL_SN_ADDRESS);
+				LED_D4 = 0;
     	}
     }
-//    Log_printf("Set ok\n");
+    // 读取初始化数据
     IapReadModelSn(MODEL_SN_ADDRESS,&g_module_id);
     IapReadModelSn(GATEWAY_ADDRESS,&g_gateway);
+    //g_module_rpl = IapReadByte(MODEL_RPL);
+    // 默认模块id的路由等级1
+    g_module_id.Sn[0] |= ( (g_module_rpl<<4) & 0x7F );
+    
     g_pre_src = g_module_id.Sn_temp;
     Usart_printf(&g_module_id.Sn[0],1);
     Usart_printf(&g_module_id.Sn[1],1);
-    //Log_printf("GateWay:");
     Usart_printf(&g_gateway.Sn[0],1);
     Usart_printf(&g_gateway.Sn[1],1);
-    Log_printf("\r\n");
-   	Log_printf("0 initialization ok\n");
+   	Log_printf(" initialization ok ");
 
     // 地址网关设置完成
     LED_D2 = ~LED_D2;
@@ -225,7 +207,8 @@ EnterRx:
 				if( 0x55 == g_rf_rx_flag )
 				{
 					g_rf_rx_flag = 0x00;	
-					RfRouteManage(RxBuf,&rf_route_data);
+					//RfRouteManage(RxBuf,&rf_route_data);
+					RfRouteManage(&rf_route_data);
 				}
 				if( 0x55 == g_search )									// 若没有搜索到路径，则跳转回搜索路径
 					goto SearchMode;

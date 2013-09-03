@@ -258,68 +258,62 @@ void test(Rf_Route* routepacket,INT8U* psentrfdata)
 	
 	CC1101_Wakeupcarry(WorCarry,2,2);
 	halRfSendPacket(psentrfdata,routepacket->Length+3);
-	Log_printf(" END ");
-	Usart_printf(&routepacket->ProtocolType,1);
+//	Log_printf(" END ");
+//	Usart_printf(&routepacket->ProtocolType,1);
 }
 
 // routesize 为路由数据长度
-void AssignRouteLevel(Rf_Route* routepacket,INT8U routesize)
+//#define   IAP_ADDRESS      	0x0000
+//#define		SEARCH_MODE			 	0x0000
+//#define		GATEWAY_ADDRESS	 	0x0200
+//#define		MODEL_SN_ADDRESS 	0x0400
+//#define		MODEL_RPL					0x0600
+//#define		ROUTEDATA_SIZE		0x0800
+//#define		ROUTEDATA_ADDRESS 0x0A00
+void AssignRouteLevel(Rf_Route* routepacket)
 {
   INT8U i;
-  //INT8U eepromdata[20];
   INT8U *proutedata = routepacket->RfRouteData.pRouteData	;
-  //if ( RidSrcCheck( routepacket ) )
-  //{
-		if ( IapCheckEEPROM(SEARCH_MODE,1) )
-		{
-			IapProgramByte(SEARCH_MODE,0x00);	
-		}
+  INT8U routesize = ( (routepacket->RfRouteData.Orien & 0x0F)-1)*2;;
+  
+		g_route_size++;
+		IapEraseSector(ROUTEDATA_SIZE);
+		IapProgramByte(ROUTEDATA_SIZE,g_route_size);
+		
+  // 只有第一次设置路由时，设定模块路由级别
+  if ( 0xFF == g_getroute )
+  {
+		IapEraseSector(SEARCH_MODE);
+		IapProgramByte(SEARCH_MODE,0x00);	
 	  g_getroute = IapReadByte(SEARCH_MODE);
 	  g_search = 0x00;
-	
-	  // 修改模块ID
-	  if ( IapCheckEEPROM(MODEL_SN_ADDRESS,2) )
-	  {
-			IapProgramByte(MODEL_SN_ADDRESS,routepacket->Des.Sn[0]);
-			IapProgramByte(MODEL_SN_ADDRESS+1,routepacket->Des.Sn[1]);  	
-	  }
-	  else
-	  {
-	  	IapEraseSector(MODEL_SN_ADDRESS);	
-			IapProgramByte(MODEL_SN_ADDRESS,routepacket->Des.Sn[0]);
-			IapProgramByte(MODEL_SN_ADDRESS+1,routepacket->Des.Sn[1]);
-	  }
-	
-		if( routesize != 0 )
-		{	
-			if ( IapCheckEEPROM(ROUTEDATA_ADDRESS,512) )
+	  // 确定第一条路由后，存储模块在网络中的路由级别
+		IapEraseSector(MODEL_RPL);
+		IapProgramByte(MODEL_RPL,routepacket->RfRouteData.Orien&0x0F);
+		g_module_rpl = IapReadByte(MODEL_RPL);
+		// 计算出模块ID
+		g_module_id.Sn[0] |= ( (g_module_rpl<<4) & 0x7F );
+	}
+
+	if( routesize != 0 )
+	{	
+			IapEraseSector(ROUTEDATA_ADDRESS);	
+			// 写入路由字节长度
+			IapProgramByte(ROUTEDATA_ADDRESS+2,routesize);
+			// 写入路由数据
+			for(i=0;i<routesize;i++)
 			{
-				// 写入路由字节长度
-				IapProgramByte(ROUTEDATA_ADDRESS,routesize);
-				// 写入路由数据
-				for(i=0;i<routesize;i++)
-				{
-					IapProgramByte(ROUTEDATA_ADDRESS+i+1,*(proutedata++));
-				}
-			}
-			else
-			{
-				IapEraseSector(ROUTEDATA_ADDRESS);	
-				// 写入路由字节长度
-				IapProgramByte(ROUTEDATA_ADDRESS+2,routesize);
-				// 写入路由数据
-				for(i=0;i<routesize;i++)
-				{
-					IapProgramByte(ROUTEDATA_ADDRESS+i+1,*(proutedata++));
-				}			
-			}
-		}
-		g_pre_src = g_module_id.Sn_temp;
-		// 0x82		终端响应基站分配路由级别命令
-		routepacket->Key = 0x82;
-		// 将数据存储到EEPROM中后，发送响应信息
-		AckARL(routepacket,RfSentBuf);
-  //}
+				IapProgramByte(ROUTEDATA_ADDRESS+i+1,*(proutedata++));
+			}			
+	}
+	
+	
+	g_pre_src = g_module_id.Sn_temp;
+	// 0x82		终端响应基站分配路由级别命令
+	routepacket->Key = 0x82;
+	// 将数据存储到EEPROM中后，发送响应信息
+	AckARL(routepacket,RfSentBuf);
+	Log_printf(" Write ok ");
 }
 
 
@@ -439,8 +433,7 @@ void TransmitDataCommand(Rf_Route* routepacket)
 //	halRfSendPacket(psentrfdata,routepacket->Length+3);	
 //}
 
-//Bool RfCheckData(INT8U *prfdata,Rf_Route routepacket,INT8U *proutedata,INT8U *pSensorData)
-void RfRouteManage(INT8U *prfdata,Rf_Route* routepacket)
+INT8U CheckRouteData(INT8U *prfdata,Rf_Route* routepacket)
 {
   INT8U routedatalength = 0;
   INT8U routeprotocol = 0;
@@ -448,7 +441,7 @@ void RfRouteManage(INT8U *prfdata,Rf_Route* routepacket)
   INT8U	checknum = 0;
   INT8U i;
   
-  routepacket->Pre = prfdata[0]; 
+	routepacket->Pre = prfdata[0]; 
   routepacket->Length = prfdata[1]; 
   routepacket->Rid = prfdata[2];
   routepacket->Key = prfdata[3]; 
@@ -488,7 +481,20 @@ void RfRouteManage(INT8U *prfdata,Rf_Route* routepacket)
 		Usart_printf(prfdata+i,1);
 	}
 	Usart_printf(&checknum,1);
-	Log_printf("    ");
+	Log_printf("    ");	
+	
+	if( routepacket->Src.Sn_temp != g_module_id.Sn_temp )
+	{
+		return 1;
+	}
+	else 
+	{
+		return 0;
+	}
+}
+
+void RfRouteManage(Rf_Route* routepacket)
+{
 
 	// 注释掉 为了测试
 	if(RidSrcCheck(routepacket))
@@ -501,7 +507,7 @@ void RfRouteManage(INT8U *prfdata,Rf_Route* routepacket)
 		  switch( routepacket->Key )    
 		  { // 申请路由协议时
 		    case 0x01:
-		    	AssignRouteLevel(routepacket,routedatalength);
+		    	AssignRouteLevel(routepacket);
 		    	break;
 		    case 0x03:
 		    	AckARL(routepacket,RfSentBuf);

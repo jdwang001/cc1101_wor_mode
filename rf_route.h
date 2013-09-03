@@ -33,13 +33,15 @@ extern INT8U RfRecBuf[64];
 extern INT8U g_rid,g_pre_rid;
 extern INT16U g_pre_src;
 extern INT8U g_getroute;
+extern Rf_Route rf_route_data;
 
-void AssignRouteLevel(Rf_Route* routepacket,INT8U routesize);
+INT8U CheckRouteData(INT8U *prfdata,Rf_Route* routepacket);
+void AssignRouteLevel(Rf_Route* routepacket);
 void AckARL(Rf_Route* routepacket,INT8U* psentrfdata);
 void TransmitDataCommand(Rf_Route* routepacket);
 void ACKTDC(Rf_Route* routepacket);
 INT8U RfCheckData(INT8U* prfdata,Rf_Route* routedata);
-void RfRouteManage(INT8U* prfdata,Rf_Route* routedata);
+void RfRouteManage(Rf_Route* routedata);
 void DirectTransmitDataCommand(Rf_Route* routepacket);
 
 #endif

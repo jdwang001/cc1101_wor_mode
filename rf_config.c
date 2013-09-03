@@ -427,8 +427,8 @@ INT8U halRfRxPacket(INT8U *rxBuffer)
 	        //return (status[1] & CRC_OK);															// 如果校验成功返回接收成功
 	        if( status[1] & CRC_OK )
 	        {
-						//TIMER0_OFF;																								// 关闭定时器
-	        	//g_wor_flag = 0x00;																				// 接收到数据后，退出全速接收模式
+						//TIMER0_OFF;																							// 关闭定时器
+	        	//g_wor_flag = 0x00;																			// 接收到数据后，退出全速接收模式
 	        	
 	        	if( 0xAA != rxBuffer[1])
 	        	{
@@ -440,12 +440,21 @@ INT8U halRfRxPacket(INT8U *rxBuffer)
 		        	
 			        if ( checknum == rxBuffer[packetLength-1] )
 			        {
-			        	//Log_printf("Check ok\n");
-			        	g_enter_rx = 0x00;																					// 收到数据就退出接收模式
-			        	g_rf_rx_flag = 0x55;																				// 而后进入路由数据处理模式
-			        	//Usart_printf(rxBuffer,packetLength);
-								LED_D3 = ~LED_D3;
-			        	return packetLength;
+			        	// 检测到转发数据，不会进入接收
+			        	if( CheckRouteData(rxBuffer,&rf_route_data) )
+			        	{
+				        	//Log_printf("Check ok\n");
+				        	g_enter_rx = 0x00;																	// 收到数据就退出接收模式
+				        	g_rf_rx_flag = 0x55;																// 而后进入路由数据处理模式
+				        	//Usart_printf(rxBuffer,packetLength);
+									LED_D3 = ~LED_D3;
+				        	return packetLength;
+				        }
+				        else
+				        {
+				        	Log_printf("  Is Me data  ");
+				        	return 0;
+				        }
 			        }
 			        else
 			        {

@@ -89,17 +89,17 @@ void IapEraseSector(INT16U addr)
 ////输出：1擦除成功 0擦除失败
 ////功能描述：按字节擦除  将每个字节编程为0xFF，而后应该可以直接写入数据。待验证
 ///*****************************************************************************************/  
-INT8U IapCheckEEPROM(INT16U addr,INT8U size)                                 
-{   
-	INT8U i;
-
-  for (i=0; i<size; i++)                         //Check whether all erase data is FF
-	{
-		if (IapReadByte(addr+i) != 0xff)
-			return 0;		
-	}
-	return 1;
-} 
+//INT8U IapCheckEEPROM(INT16U addr,INT8U size)                                 
+//{   
+//	INT8U i;
+//
+//  for (i=0; i<size; i++)                         //Check whether all erase data is FF
+//	{
+//		if (IapReadByte(addr+i) != 0xff)
+//			return 0;		
+//	}
+//	return 1;
+//} 
 
 /*****************************************************************************************
 //函数名：void IapReadModelSn(INT16U addr,Model_Sn* sndata) 

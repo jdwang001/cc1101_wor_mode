@@ -37,7 +37,9 @@
 #define		SEARCH_MODE			 	0x0000
 #define		GATEWAY_ADDRESS	 	0x0200
 #define		MODEL_SN_ADDRESS 	0x0400
-#define		ROUTEDATA_ADDRESS 0x0500
+#define		MODEL_RPL					0x0600
+#define		ROUTEDATA_SIZE		0x0800
+#define		ROUTEDATA_ADDRESS 0x0A00
 
 typedef union MODULE_SN{
  INT8U Sn[2];
@@ -69,6 +71,7 @@ extern INT8U g_rx_flag;
 extern INT8U g_search;
 extern INT8U TxBuf[64];	 			// 11字节, 如果需要更长的数据包,请正确设置
 extern INT8U RxBuf[64];
+extern INT8U g_module_rpl;
 
 void IapIdle(); 
 INT8U IapReadByte(INT16U addr); 

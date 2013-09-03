@@ -2,7 +2,7 @@
 #define _RF_CONFIG_H__
 
 #include "mcu_config.h"
-
+#include "rf_route.h"
 
 
 
@@ -150,6 +150,7 @@ extern INT8U WorCarry[2];
 extern INT8U PaTabel[8];
 extern INT8U Test[20];
 extern const RF_SETTINGS rfSettings;
+
 
 void halWait(INT16U timeout);
 void RESET_CC1100(void);
