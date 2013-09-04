@@ -38,7 +38,7 @@
 #define		GATEWAY_ADDRESS	 	0x0200
 #define		MODEL_SN_ADDRESS 	0x0400
 #define		MODEL_RPL					0x0600
-#define		ROUTEDATA_SIZE		0x0800
+#define		ROUTEDATA_NUM			0x0800
 #define		ROUTEDATA_ADDRESS 0x0A00
 
 typedef union MODULE_SN{

@@ -470,7 +470,7 @@ INT8U halRfRxPacket(INT8U *rxBuffer)
 	        }
 	        else
 	        {	
-	        	Log_printf("CRC error\n");
+	        	Log_printf("data CRC error\n");
 	        	return 0;
 					}
 	    }
@@ -497,7 +497,7 @@ INT8U halRfRxPacket(INT8U *rxBuffer)
             }
             else
             {
-            	Log_printf("CRC error\n");
+            	Log_printf("3 CRC error\n");
           	}							
 					}
 					else
@@ -700,13 +700,13 @@ INT8U CC1101_Worwakeup(void)
 		            }
 		            else
 		            {
-		            	Log_printf("CRC error\n");
+		            	Log_printf("wakeup CRC error\n");
 		          	}							
 							}
 							else
 							{
 								Usart_printf(wor_data,2);
-								Log_printf("  why Not me\n");	
+								Log_printf(" wakeup Not me\n");	
 							}
         	}
 	        else 

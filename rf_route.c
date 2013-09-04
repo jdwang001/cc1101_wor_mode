@@ -111,26 +111,41 @@ void AckARL(Rf_Route* routepacket,INT8U* psentrfdata)
   		psentrfdata[routeprotocol+5+i] = *(routepacket->pSensorData+i);
   }
   // routepacket->Length长度没有包含 首字节 校验和 长度字节本身
-  // 计算校验和
-//	for( i=0;i<routepacket->Length+3;i++ )  
-//	{
-//		psentrfdata[routeprotocol+5+datalength] += psentrfdata[i];
-//	}
-//	
-	for( i=0;i<routepacket->Length+2;i++ )  
+  Log_printf(" YING DA   ");
+	for( i=0;i<routepacket->Length+2;i++ )
 	{
 		checknum += psentrfdata[i];
+		Usart_printf(psentrfdata+i,1);
 	}
+	Usart_printf(&checknum,1);
+	Log_printf("    ");
 	psentrfdata[routeprotocol+5+datalength] = checknum;
 		
-	// 提取出当前路由深度  发送唤醒波定点唤醒下级  由于对CRPL进行了操作，所以无需关心方向
-	WorCarry[0] = psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2];
-	WorCarry[1] = psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2+1];
+	
+	
 	
 	// 不是第一级路由则必须发送唤醒波
-	if( 1 != routepacket->RfRouteData.CRPL )
-		CC1101_Wakeupcarry(WorCarry,2,2);
-	
+//	if( 1 != routepacket->RfRouteData.CRPL )
+//	{
+//		// 提取出当前路由深度  发送唤醒波定点唤醒下级  由于对CRPL进行了操作，所以无需关心方向
+//		if( routedatalength != 0 )
+//		if(0 != )
+//		{
+//			WorCarry[0] = psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2];
+//			WorCarry[1] = psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2+1];
+//		}	
+//			
+//		CC1101_Wakeupcarry(WorCarry,2,2);
+//	}
+		// 提取出当前路由深度  发送唤醒波定点唤醒下级  由于对CRPL进行了操作，所以无需关心方向
+		// 路由深度为1无需发送唤醒波
+		if( routedatalength != 0 )
+		{
+			// 路由不为0，就直接取当前数据发送唤醒波			
+			WorCarry[0] = psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2]&MCU_ID;
+			WorCarry[1] = psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2+1];
+		}	
+	CC1101_Wakeupcarry(WorCarry,2,2);
 	halRfSendPacket(psentrfdata,routepacket->Length+3);
 	g_rid++;
 }
@@ -199,6 +214,7 @@ void test(Rf_Route* routepacket,INT8U* psentrfdata)
 	{
 	  if( routedatalength != 0 )
 	  {
+	  	// 有多长取多少字节的值，故没有错误
 	    for(i=0;i<routedatalength;i++)
 	    	psentrfdata[8+i] = *(routepacket->RfRouteData.pRouteData+i);
 	  }
@@ -232,7 +248,7 @@ void test(Rf_Route* routepacket,INT8U* psentrfdata)
   }
   // routepacket->Length长度没有包含 首字节 校验和 长度字节本身
   // 计算校验和
-  Log_printf("    ");
+  Log_printf(" ZHUAN FA   ");
 	for( i=0;i<routepacket->Length+2;i++ )
 	{
 		checknum += psentrfdata[i];
@@ -244,6 +260,7 @@ void test(Rf_Route* routepacket,INT8U* psentrfdata)
 	psentrfdata[routeprotocol+5+datalength] = checknum;
 	
 	// 接收到数据后通过广播转发出去
+	// 搜索路由时，暂时这样处理
 	if ( 0x81 == routepacket->Key ) 
 	{
 		// 进行广播唤醒 搜寻路径
@@ -251,10 +268,25 @@ void test(Rf_Route* routepacket,INT8U* psentrfdata)
 	}
 	else
 	{
-		// 转发数据时，直接取路由中的数据进行唤醒下级
-		WorCarry[0] = psentrfdata[8+(psentrfdata[7]-1)*2];
-		WorCarry[1] = psentrfdata[8+(psentrfdata[7]-1)*2+1];
+		if (psentrfdata[7]!=1)
+		{
+			// 转发数据时，直接取路由中的数据进行唤醒下级
+			WorCarry[0] = psentrfdata[8+(psentrfdata[7])*2]&MCU_ID;
+			WorCarry[1] = psentrfdata[8+(psentrfdata[7])*2+1];
+		}
+		else
+		{
+			WorCarry[0] = routepacket->Des.Sn[0]&MCU_ID;
+			WorCarry[1] = routepacket->Des.Sn[1];			
+		}
 	}
+	
+	
+	
+	
+	
+	
+	
 	
 	CC1101_Wakeupcarry(WorCarry,2,2);
 	halRfSendPacket(psentrfdata,routepacket->Length+3);
@@ -268,18 +300,15 @@ void test(Rf_Route* routepacket,INT8U* psentrfdata)
 //#define		GATEWAY_ADDRESS	 	0x0200
 //#define		MODEL_SN_ADDRESS 	0x0400
 //#define		MODEL_RPL					0x0600
-//#define		ROUTEDATA_SIZE		0x0800
+//#define		ROUTEDATA_NUM			0x0800
 //#define		ROUTEDATA_ADDRESS 0x0A00
 void AssignRouteLevel(Rf_Route* routepacket)
 {
   INT8U i;
   INT8U *proutedata = routepacket->RfRouteData.pRouteData	;
-  INT8U routesize = ( (routepacket->RfRouteData.Orien & 0x0F)-1)*2;;
-  
-		g_route_size++;
-		IapEraseSector(ROUTEDATA_SIZE);
-		IapProgramByte(ROUTEDATA_SIZE,g_route_size);
-		
+  INT8U routesize = ( (routepacket->RfRouteData.Orien & 0x0F)-1)*2;
+  INT8U address;
+
   // 只有第一次设置路由时，设定模块路由级别
   if ( 0xFF == g_getroute )
   {
@@ -291,24 +320,45 @@ void AssignRouteLevel(Rf_Route* routepacket)
 		IapEraseSector(MODEL_RPL);
 		IapProgramByte(MODEL_RPL,routepacket->RfRouteData.Orien&0x0F);
 		g_module_rpl = IapReadByte(MODEL_RPL);
-		// 计算出模块ID
+		// 计算出模块ID附有路由信息
 		g_module_id.Sn[0] |= ( (g_module_rpl<<4) & 0x7F );
+		g_pre_src = g_module_id.Sn_temp;
 	}
+	
+	if ( g_route_size < 4 ) 
+  {
+  	// 存储路由条数
+		IapEraseSector(ROUTEDATA_NUM);
+		IapProgramByte(ROUTEDATA_NUM,g_route_size);
 
-	if( routesize != 0 )
-	{	
-			IapEraseSector(ROUTEDATA_ADDRESS);	
-			// 写入路由字节长度
-			IapProgramByte(ROUTEDATA_ADDRESS+2,routesize);
+		switch( g_route_size )
+		{
+			case 0x01:
+				address = 	ROUTEDATA_ADDRESS;
+				break;
+			
+			case 0x02:
+				address = 	ROUTEDATA_ADDRESS+0x0200;
+				break;
+			
+			case 0x03:
+				address = 	ROUTEDATA_ADDRESS+0x0400;
+				break;			
+		}
+		// 存储路由字节长度
+		IapEraseSector(address);	
+		IapProgramByte(address,routesize);
+		if( routesize != 0 )
+		{	
 			// 写入路由数据
 			for(i=0;i<routesize;i++)
 			{
-				IapProgramByte(ROUTEDATA_ADDRESS+i+1,*(proutedata++));
+				IapProgramByte(address+i,*(proutedata++));
 			}			
-	}
-	
-	
-	g_pre_src = g_module_id.Sn_temp;
+		}
+		g_route_size++;
+  }
+
 	// 0x82		终端响应基站分配路由级别命令
 	routepacket->Key = 0x82;
 	// 将数据存储到EEPROM中后，发送响应信息
@@ -510,7 +560,12 @@ void RfRouteManage(Rf_Route* routepacket)
 		    	AssignRouteLevel(routepacket);
 		    	break;
 		    case 0x03:
+		    	Log_printf("  Read data  ");
+		    	routepacket->Key = 0x83;
 		    	AckARL(routepacket,RfSentBuf);
+//		    	Usart_printf(&WorCarry[0],1);
+//		    	Usart_printf(&WorCarry[1],1);
+//		    	Log_printf("  ");
 		    	break;
 		    //case 0x81:  ACKARL(routepacket);
 		    //case 0x82:  ACKTDC(routepacket);break;
@@ -588,10 +643,6 @@ void RfRouteManage(Rf_Route* routepacket)
 //	
 //}
 
-
-
-
-
 //	psentrfdata[0] = routepacket->Pre;
 //	
 //	psentrfdata[2] = g_rid;										// 定义的全局变量g_rid
@@ -601,10 +652,6 @@ void RfRouteManage(Rf_Route* routepacket)
 //	
 //	psentrfdata[6] = (routepacket->RfRouteData.Orien&0x0F)|0x50;	// 更改传输方向
 //	psentrfdata[7] = routepacket->RfRouteData.CRPL;
-
-
-
-
 
 	//路由节点存在到基站的路由且允许直接转发给基站，
 //	switch( routepacket->Key )    
@@ -624,15 +671,6 @@ void RfRouteManage(Rf_Route* routepacket)
 //    	Log_printf("Data not for me\n");
 //    	break;	
 //  }
-
-
-
-
-
-
-
-
-
 
 //	psentrfdata[0] = routepacket->Pre;
 //	

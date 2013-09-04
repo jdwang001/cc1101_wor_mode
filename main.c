@@ -24,7 +24,7 @@ INT8U RfRecBuf[64];
 Rf_Route rf_route_data;
 INT16U g_pre_src;
 INT8U g_module_rpl = 0x01;
-INT8U g_route_size = 0x00;
+INT8U g_route_size = 0x01;
 //INT8U	Test[20] = "Send Packet";
 // 路由申请命令
 // Orien
@@ -107,6 +107,13 @@ void main()
     halSpiWriteBurstReg(CCxxx0_PATABLE, PaTabel, 8);
 		CC1101_Setwor();
     G_IT_ON;															// 开启单片机全局中断
+
+    Usart_printf(&g_module_id.Sn[0],1);
+    Usart_printf(&g_module_id.Sn[1],1);
+    Usart_printf(&g_gateway.Sn[0],1);
+    Usart_printf(&g_gateway.Sn[1],1);
+    Log_printf("   ");
+
 		
 		// 上电设置网关
     // 只有外部中断没有打开，现在进行设置网关字节 地址和网管不能为全0xFFFF
@@ -117,27 +124,28 @@ void main()
     	if( 0x55 == g_rx_flag )
     	{
   			g_rx_flag = 0x00;
+
 				// 将网关数据写入
 				IapProgramByte(GATEWAY_ADDRESS,TxBuf[1]);
 				IapProgramByte(GATEWAY_ADDRESS+1,TxBuf[2]);
-				Log_printf("GATEWAY OK\n");				
 				//g_gateway.Sn_temp = IapReadByte(GATEWAY_ADDRESS);
 
 				// 将地址数据写入
 				IapProgramByte(MODEL_SN_ADDRESS,TxBuf[3]);
 				IapProgramByte(MODEL_SN_ADDRESS+1,TxBuf[4]);
-				Log_printf("MODEL_SN OK\n");
 				//g_module_id.Sn_temp = IapReadByte(MODEL_SN_ADDRESS);
+				Log_printf("GATEWAY OK\n");
+				Log_printf("MODEL_SN OK\n");
 				LED_D4 = 0;
+				// 读取设置数据
+    		IapReadModelSn(MODEL_SN_ADDRESS,&g_module_id);
+    		IapReadModelSn(GATEWAY_ADDRESS,&g_gateway);
     	}
     }
-    // 读取初始化数据
-    IapReadModelSn(MODEL_SN_ADDRESS,&g_module_id);
-    IapReadModelSn(GATEWAY_ADDRESS,&g_gateway);
-    //g_module_rpl = IapReadByte(MODEL_RPL);
+
+    // g_module_rpl = IapReadByte(MODEL_RPL);
     // 默认模块id的路由等级1
     g_module_id.Sn[0] |= ( (g_module_rpl<<4) & 0x7F );
-    
     g_pre_src = g_module_id.Sn_temp;
     Usart_printf(&g_module_id.Sn[0],1);
     Usart_printf(&g_module_id.Sn[1],1);
@@ -207,7 +215,6 @@ EnterRx:
 				if( 0x55 == g_rf_rx_flag )
 				{
 					g_rf_rx_flag = 0x00;	
-					//RfRouteManage(RxBuf,&rf_route_data);
 					RfRouteManage(&rf_route_data);
 				}
 				if( 0x55 == g_search )									// 若没有搜索到路径，则跳转回搜索路径
@@ -220,7 +227,9 @@ EnterRx:
 			PCON |= PD_ON;												// 从掉电模式唤醒后，程序从这行开市			
 			//Log_printf("Exit pd\n");
     }	
-    
+}
+
+
 //    while (1)
 //    {
 //    	//Log_printf("first pd\n");
@@ -238,8 +247,7 @@ EnterRx:
 //			halSpiStrobe(CCxxx0_SWORRST);      //复位到 事件1
 //			halSpiStrobe(CCxxx0_SWOR);         //启动WOR	
 //			//Log_printf("Exit pd\n");
-//    }						
-}
+//    }			
 
 //void main() 
 // { 

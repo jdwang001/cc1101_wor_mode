@@ -34,6 +34,7 @@ extern INT8U g_rid,g_pre_rid;
 extern INT16U g_pre_src;
 extern INT8U g_getroute;
 extern Rf_Route rf_route_data;
+extern INT8U g_route_size;
 
 INT8U CheckRouteData(INT8U *prfdata,Rf_Route* routepacket);
 void AssignRouteLevel(Rf_Route* routepacket);
