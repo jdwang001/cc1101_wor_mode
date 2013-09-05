@@ -18,9 +18,10 @@ INT8U g_search = 0x03,g_getroute=0x00;							// 进行3次搜索路由
 INT8U g_rid = 0x01,g_pre_rid = 0x00;
 INT8U	WorCarry[2] = {0xFF,0xFF};
 INT8U TxBuf[64];	 			// 11字节, 如果需要更长的数据包,请正确设置
-INT8U RxBuf[64];
+//INT8U RxBuf[64];
 INT8U RfSentBuf[64];
 INT8U RfRecBuf[64];
+INT8U	SensorData[20];		// 传感器数据
 Rf_Route rf_route_data;
 INT16U g_pre_src;
 INT8U g_module_rpl = 0x01;
@@ -209,7 +210,7 @@ SearchMode:
 				// 将接收的数据存储到RxBuf数组中
 EnterRx:
 				while(g_enter_rx)
-					halRfRxPacket(RxBuf);
+					halRfRxPacket(RfRecBuf);
 
 				// 此处进行rf数据处理
 				if( 0x55 == g_rf_rx_flag )

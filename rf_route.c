@@ -103,6 +103,9 @@ void AckARL(Rf_Route* routepacket,INT8U* psentrfdata)
   psentrfdata[routeprotocol+2] = routepacket->Des.Sn[1];
   psentrfdata[routeprotocol+3] = routepacket->Src.Sn[0];
   psentrfdata[routeprotocol+4] = routepacket->Src.Sn[1];
+  
+  
+  // 若要使读取数据，应该对routepacket->Length进行修改
   // 数据段长度
   datalength = routepacket->Length - ( routedatalength+2 ) - 4 - 5;     // 传感器数据长度
   if( datalength != 0 )
@@ -141,11 +144,12 @@ void AckARL(Rf_Route* routepacket,INT8U* psentrfdata)
 		// 路由深度为1无需发送唤醒波
 		if( routedatalength != 0 )
 		{
-			// 路由不为0，就直接取当前数据发送唤醒波			
+			// 路由不为0，就直接取第一个路由数据发送唤醒波			
 			WorCarry[0] = psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2]&MCU_ID;
 			WorCarry[1] = psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2+1];
+			CC1101_Wakeupcarry(WorCarry,2,2);
 		}	
-	CC1101_Wakeupcarry(WorCarry,2,2);
+	
 	halRfSendPacket(psentrfdata,routepacket->Length+3);
 	g_rid++;
 }
@@ -281,13 +285,6 @@ void test(Rf_Route* routepacket,INT8U* psentrfdata)
 		}
 	}
 	
-	
-	
-	
-	
-	
-	
-	
 	CC1101_Wakeupcarry(WorCarry,2,2);
 	halRfSendPacket(psentrfdata,routepacket->Length+3);
 //	Log_printf(" END ");
@@ -358,12 +355,20 @@ void AssignRouteLevel(Rf_Route* routepacket)
 		}
 		g_route_size++;
   }
+  else 
+  {
+  	goto END;
+  }
 
 	// 0x82		终端响应基站分配路由级别命令
 	routepacket->Key = 0x82;
 	// 将数据存储到EEPROM中后，发送响应信息
 	AckARL(routepacket,RfSentBuf);
 	Log_printf(" Write ok ");
+
+END:
+	Log_printf("  Routesize full  ");
+	
 }
 
 
@@ -545,7 +550,6 @@ INT8U CheckRouteData(INT8U *prfdata,Rf_Route* routepacket)
 
 void RfRouteManage(Rf_Route* routepacket)
 {
-
 	// 注释掉 为了测试
 	if(RidSrcCheck(routepacket))
 	{
