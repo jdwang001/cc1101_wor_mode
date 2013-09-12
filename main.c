@@ -100,7 +100,7 @@ const RF_SETTINGS rfSettings =
 void main()
 {
     INT8U i=0;
-    INT8U search_temp = 0x03;
+    INT8U search_temp = 0x06;							 // search_temp 可以增加到6 在search_temp小于3的时候 开始发送广播唤醒
     
     CpuInit();
     POWER_UP_RESET_CC1100();
@@ -145,7 +145,7 @@ void main()
     }
 
     // g_module_rpl = IapReadByte(MODEL_RPL);
-    // 默认模块id的路由等级1
+    // 默认模块id的路由等级1  模块ID 最高位为0 表示路由模块
     g_module_id.Sn[0] |= ( (g_module_rpl<<4) & 0x7F );
     g_pre_src = g_module_id.Sn_temp;
     Usart_printf(&g_module_id.Sn[0],1);
@@ -180,7 +180,8 @@ SearchMode:
 	  		}    		
 	  		// 进行唤醒时，只需要把路由标识滤除即可 将路由标识高字节分出一位代表是模块还是基站
 	  		// 首先发送唤醒波，而后发送数据 进行路由搜索时，使用广播唤醒
-	  		CC1101_Wakeupcarry(WorCarry, 2,2);
+	  		if( search_temp < 3 )
+	  			CC1101_Wakeupcarry(WorCarry, 2,2);
 	  		halRfSendPacket(SearchData, 14);
 	  		g_rid++;															// 发送完成后g_rid自增
 	  		//g_wor_flag = 0x55;

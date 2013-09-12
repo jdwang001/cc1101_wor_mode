@@ -32,7 +32,7 @@ INT8U RidSrcCheck(Rf_Route* routepacket)
 	}
 }
 
-// 判断数据是否是发送给本模块
+// 判断数据是否是发送给本模块 IsMe() 不能省 2013年9月12日17:58:05
 INT8U IsMe(Rf_Route* routepacket)
 {
 //	INT16U test_id = 0,test_des = 0;
@@ -557,7 +557,7 @@ void RfRouteManage(Rf_Route* routepacket)
 		if( IsMe(routepacket) )
 		{
 			//Log_printf("  0002  ");
-		  //Key 命令字为0x01时 为分配路由级别命令 命令字为0x02时，为传输数据命令
+		  //Key 命令字为0x01时 为分配路由级别命令 命令字为0x03时，为传输数据命令
 		  switch( routepacket->Key )    
 		  { // 申请路由协议时
 		    case 0x01:
