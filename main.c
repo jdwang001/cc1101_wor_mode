@@ -14,7 +14,7 @@ Module_Sn g_module_id,g_gateway;
 INT16U	timer = 0;
 INT8U g_wor_flag = 0x00,g_rx_flag = 0,g_rf_rx_flag = 0,g_rx_timeout = 0x00,g_enter_rx = 0x00;
 
-INT8U g_search = 0x03,g_getroute=0x00;							// 进行3次搜索路由
+INT8U g_search = 0x00,g_getroute=0x00;							// 进行3次搜索路由
 INT8U g_rid = 0x01,g_pre_rid = 0x00;
 INT8U	WorCarry[2] = {0xFF,0xFF};
 INT8U TxBuf[64];	 			// 11字节, 如果需要更长的数据包,请正确设置
@@ -157,8 +157,8 @@ void main()
     // 地址网关设置完成
     LED_D2 = ~LED_D2;
     // 读出搜索模式 首次上电为0xFF 则进行搜索
-    g_getroute = IapReadByte(SEARCH_MODE);
-		if( 0xFF == g_getroute )
+    g_search = IapReadByte(SEARCH_MODE);
+		if( 0xFF == g_search )
 		{
 SearchMode:
 	  	while( search_temp-- != 0 )
@@ -188,7 +188,7 @@ SearchMode:
 	  		timer = 0; 
 				Timer0_Init(10);
 				TIMER0_ON;	
-				g_search = 0x55;
+				//g_search = 0x55;
 				g_enter_rx = 0x55;
 				// 存放校验和
 				SearchData[13] = 0x00;
@@ -196,10 +196,10 @@ SearchMode:
 	  	}	
 	  	g_search = 0x00;		
 		}
-		else 
-		{
-			g_search = 0x00;
-		}
+//		else 
+//		{
+//			g_search = 0x00;
+//		}
 
   	
     while (1)
@@ -219,7 +219,7 @@ EnterRx:
 					g_rf_rx_flag = 0x00;	
 					RfRouteManage(&rf_route_data);
 				}
-				if( 0x55 == g_search )									// 若没有搜索到路径，则跳转回搜索路径
+				if( 0xFF == g_search )									// 若没有搜索到路径，则跳转回搜索路径
 					goto SearchMode;
 			}
 			

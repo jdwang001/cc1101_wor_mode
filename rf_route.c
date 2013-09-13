@@ -307,12 +307,12 @@ void AssignRouteLevel(Rf_Route* routepacket)
   INT8U address;
 
   // 只有第一次设置路由时，设定模块路由级别
-  if ( 0xFF == g_getroute )
+  if ( 0xFF == g_search )
   {
 		IapEraseSector(SEARCH_MODE);
 		IapProgramByte(SEARCH_MODE,0x00);	
-	  g_getroute = IapReadByte(SEARCH_MODE);
-	  g_search = 0x00;
+	  g_search = IapReadByte(SEARCH_MODE);
+	  //g_search = 0x00;//g_getroute
 	  // 确定第一条路由后，存储模块在网络中的路由级别
 		IapEraseSector(MODEL_RPL);
 		IapProgramByte(MODEL_RPL,routepacket->RfRouteData.Orien&0x0F);

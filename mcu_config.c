@@ -364,7 +364,7 @@ void uart_isr()  interrupt 4   //´®¿ÚÖÐ¶Ï
 //*****************************************************************************************	
 void timer0_isr()  interrupt 1   //Timer0ÖÐ¶Ï
 {
-	if( 0x55 == g_search )
+	if( 0xFF == g_search )
 		Timer0_Init(10);
 	else 
 		Timer0_Init(1);
