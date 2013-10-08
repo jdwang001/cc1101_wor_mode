@@ -29,6 +29,7 @@ typedef struct RF_ROUTE{
 //INT8U RouteData[6];				// 路由数据
 //INT8U SensorData[10];			// 传感器数据
 extern INT8U RfSentBuf[64];
+extern INT8U SensorData[20];
 //extern INT8U RfRecBuf[64];
 extern INT8U g_rid,g_pre_rid;
 extern INT16U g_pre_src;

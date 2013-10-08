@@ -21,7 +21,7 @@ INT8U TxBuf[64];	 			// 11字节, 如果需要更长的数据包,请正确设置
 //INT8U RxBuf[64];
 INT8U RfSentBuf[64];
 INT8U RfRecBuf[64];
-INT8U	SensorData[20];		// 传感器数据
+INT8U	SensorData[20]={0xFF,0xFF,0xFF,0xFF};		// 传感器数据
 Rf_Route rf_route_data;
 INT16U g_pre_src;
 INT8U g_module_rpl = 0x01;
@@ -35,6 +35,7 @@ INT8U SearchData[14] = {0xAA,0x0B,0x01,0x81,0x10,0x01,0x51,0x01,0x01,0x00,0x01,0
 //INT8U PaTabel[8] = {0x04 ,0x04 ,0x04 ,0x04 ,0x04 ,0x04 ,0x04 ,0x04};  //-30dBm   功率最小
 //INT8U PaTabel[8] = {0x60 ,0x60 ,0x60 ,0x60 ,0x60 ,0x60 ,0x60 ,0x60};  //0dBm
 INT8U PaTabel[8] = {0xC0 ,0xC0 ,0xC0 ,0xC0 ,0xC0 ,0xC0 ,0xC0 ,0xC0};
+
 
 const RF_SETTINGS rfSettings = 
 {
@@ -181,7 +182,7 @@ SearchMode:
 	  		// 进行唤醒时，只需要把路由标识滤除即可 将路由标识高字节分出一位代表是模块还是基站
 	  		// 首先发送唤醒波，而后发送数据 进行路由搜索时，使用广播唤醒
 	  		if( search_temp < 3 )
-	  			CC1101_Wakeupcarry(WorCarry, 2,2);
+	  			CC1101_Wakeupcarry(WorCarry, 2,4);
 	  		halRfSendPacket(SearchData, 14);
 	  		g_rid++;															// 发送完成后g_rid自增
 	  		//g_wor_flag = 0x55;

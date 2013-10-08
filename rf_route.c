@@ -94,6 +94,7 @@ void AckARL(Rf_Route* routepacket,INT8U* psentrfdata)
   routedatalength = ( (routepacket->RfRouteData.Orien & 0x0F)-1 )*2;
   psentrfdata[6] = (routepacket->RfRouteData.Orien&0x0F)|0x50;		// 更改方向
   psentrfdata[7] = routepacket->RfRouteData.CRPL;
+  
   // 当路由深度为0时，pRouteData不指向数组
   if( routedatalength != 0 )
   {
@@ -130,8 +131,7 @@ void AckARL(Rf_Route* routepacket,INT8U* psentrfdata)
 	Log_printf("    ");
 	psentrfdata[routeprotocol+5+datalength] = checknum;
 		
-	
-	
+	Usart_printf(&psentrfdata[routeprotocol+5+datalength],1);
 	
 	// 不是第一级路由则必须发送唤醒波
 //	if( 1 != routepacket->RfRouteData.CRPL )
@@ -153,7 +153,7 @@ void AckARL(Rf_Route* routepacket,INT8U* psentrfdata)
 			// 路由不为0，就直接取第一个路由数据发送唤醒波			
 			WorCarry[0] = psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2]&MCU_ID;
 			WorCarry[1] = psentrfdata[8+(routepacket->RfRouteData.CRPL-1)*2+1];
-			CC1101_Wakeupcarry(WorCarry,2,2);
+			CC1101_Wakeupcarry(WorCarry,2,4);
 		}	
 	
 	halRfSendPacket(psentrfdata,routepacket->Length+3);
@@ -291,7 +291,7 @@ void test(Rf_Route* routepacket,INT8U* psentrfdata)
 		}
 	}
 	
-	CC1101_Wakeupcarry(WorCarry,2,2);
+	CC1101_Wakeupcarry(WorCarry,2,4);
 	halRfSendPacket(psentrfdata,routepacket->Length+3);
 //	Log_printf(" END ");
 //	Usart_printf(&routepacket->ProtocolType,1);
@@ -544,21 +544,24 @@ INT8U CheckRouteData(INT8U *prfdata,Rf_Route* routepacket)
 	Usart_printf(&checknum,1);
 	Log_printf("    ");	
 	
-	if( routepacket->Src.Sn_temp != g_module_id.Sn_temp )
-	{
-		return 1;
-	}
-	else 
-	{
-		return 0;
-	}
+	
+	
+	return RidSrcCheck(routepacket);
+	// 收到自身数据，不进行处理
+//	if( routepacket->Src.Sn_temp != g_module_id.Sn_temp )
+//	{
+//		return 1;
+//	}
+//	else 
+//	{
+//		return 0;
+//	}
 }
 
 void RfRouteManage(Rf_Route* routepacket)
 {
 	// 注释掉 为了测试
-	if(RidSrcCheck(routepacket))
-	{
+
 		//Log_printf("  0001  ");
 		if( IsMe(routepacket) )
 		{
@@ -571,6 +574,10 @@ void RfRouteManage(Rf_Route* routepacket)
 		    	break;
 		    case 0x03:
 		    	Log_printf("  Read data  ");
+		    	// 加入传感器数据长度
+		    	routepacket->Length += 3;
+		    	// 加入传感器数据
+		    	routepacket->pSensorData = SensorData;
 		    	routepacket->Key = 0x83;
 		    	AckARL(routepacket,RfSentBuf);
 //		    	Usart_printf(&WorCarry[0],1);
@@ -596,7 +603,7 @@ void RfRouteManage(Rf_Route* routepacket)
 				TransmitDataCommand(routepacket);
 		}		
 		
-	}
+
 	
 }
 
