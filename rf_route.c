@@ -10,6 +10,12 @@
 // 判断路由数据Rid
 INT8U RidSrcCheck(Rf_Route* routepacket)
 {
+	//  此处增加判断是否处于同一网关
+	if ( g_gateway.Sn_temp != routepacket->Gateway.Sn_temp )
+	{
+		Log_printf("Gateway err\r\n");
+		return 0;	
+	}
 	// 收到自身发出的数据，直接返回
 	if( routepacket->Src.Sn_temp == g_module_id.Sn_temp )
 	{
