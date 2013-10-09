@@ -239,11 +239,15 @@ void halRfWriteRfSettings(void)
 //*****************************************************************************************
 void halRfSendPacket(INT8U *txBuffer, INT8U size) 
 {
+		INT8U registerstatus;
 		// 配置了IOCFG0.GDO0_CFG=0x06 发送/接收到同步字时置位，并在数据包的末尾取消置位
 		//INT1_OFF;
 		// 首次初始化，开启可变数据包长度，长度字节被首先写入，没有开启地址识别，第二个字节无需写入ADR
     halSpiWriteReg(CCxxx0_TXFIFO, size);
     halSpiWriteBurstReg(CCxxx0_TXFIFO, txBuffer, size);	//写入要发送的数据
+    
+    registerstatus = halSpiReadStatus(CCxxx0_TXBYTES);
+		Usart_printf(&registerstatus,1);
     
     halSpiStrobe(CCxxx0_STX);		//进入发送模式发送数据
     
@@ -459,6 +463,7 @@ INT8U halRfRxPacket(INT8U *rxBuffer)
 			        else
 			        {
 			        	Usart_printf(rxBuffer,packetLength);
+			        	//halRfSendPacket(rxBuffer,packetLength);	
 			        	Log_printf("Error check\n");
 			        	return 0;
 			        }

@@ -53,6 +53,7 @@ INT8U IsMe(Rf_Route* routepacket)
 //	Log_printf("Test_id:");
 //	Usart_printf(&(temp_id_1),1);
 //  Usart_printf(&(temp_id_2),1);
+
 //  Log_printf("Test_des:");
 //  Usart_printf(&(temp_des_1),1);
 //  Usart_printf(&(temp_des_2),1);
@@ -81,6 +82,7 @@ void AckARL(Rf_Route* routepacket,INT8U* psentrfdata)
   INT8U routedatalength=0;
   INT8U routeprotocol=0;
   INT8U datalength=0;
+  INT8U registerstatus = 0x00;
 
   psentrfdata[0] = routepacket->Pre; 
   psentrfdata[1] = routepacket->Length; 
@@ -95,6 +97,15 @@ void AckARL(Rf_Route* routepacket,INT8U* psentrfdata)
   psentrfdata[6] = (routepacket->RfRouteData.Orien&0x0F)|0x50;		// 更改方向
   psentrfdata[7] = routepacket->RfRouteData.CRPL;
   
+//	if ( routepacket->Key == 0x83 ) 
+//	{
+//		// 加入传感器数据长度
+//		psentrfdata[1] += 3;
+//		// 加入传感器数据
+//		routepacket->pSensorData = SensorData;		
+//	}
+
+
   // 当路由深度为0时，pRouteData不指向数组
   if( routedatalength != 0 )
   {
@@ -115,6 +126,8 @@ void AckARL(Rf_Route* routepacket,INT8U* psentrfdata)
   // 若要使读取数据，应该对routepacket->Length进行修改
   // 数据段长度
   datalength = routepacket->Length - ( routedatalength+2 ) - 4 - 5;     // 传感器数据长度
+  //datalength = psentrfdata[1]  - ( routedatalength+2 ) - 4 - 5;     // 传感器数据长度
+  
   if( datalength != 0 )
   {
   	for( i=0;i<datalength;i++ )
@@ -123,6 +136,7 @@ void AckARL(Rf_Route* routepacket,INT8U* psentrfdata)
   // routepacket->Length长度没有包含 首字节 校验和 长度字节本身
   Log_printf(" YING DA   ");
 	for( i=0;i<routepacket->Length+2;i++ )
+	//for( i=0;i<psentrfdata[1]+2;i++ )
 	{
 		checknum += psentrfdata[i];
 		Usart_printf(psentrfdata+i,1);
@@ -156,7 +170,20 @@ void AckARL(Rf_Route* routepacket,INT8U* psentrfdata)
 			CC1101_Wakeupcarry(WorCarry,2,4);
 		}	
 	
+	
 	halRfSendPacket(psentrfdata,routepacket->Length+3);
+	
+//	registerstatus = halSpiReadStatus(CCxxx0_FIFOTHR);
+//	Usart_printf(&registerstatus,1);
+	
+	//halRfSendPacket(psentrfdata,psentrfdata[1]+3);
+//	Log_printf("    ");
+//	for ( i=0; i<psentrfdata[1]+3; i++)
+//	{
+//		Usart_printf(psentrfdata+i,1);
+//	}
+//	Log_printf("    ");
+	
 	g_rid++;
 }
 // 路由2的申请命令
@@ -503,17 +530,24 @@ INT8U CheckRouteData(INT8U *prfdata,Rf_Route* routepacket)
   INT8U i;
   
 	routepacket->Pre = prfdata[0]; 
+//	Usart_printf(&(routepacket->Pre),1);
+//	Usart_printf(&(prfdata[0]),1);
+	
   routepacket->Length = prfdata[1]; 
+//  Usart_printf(&(routepacket->Length),1);
+//  Usart_printf(&(prfdata[1]),1);
+  
   routepacket->Rid = prfdata[2];
   routepacket->Key = prfdata[3]; 
   
   routepacket->Gateway.Sn[0] = prfdata[4];
   routepacket->Gateway.Sn[1] = prfdata[5];
+ 
+  routepacket->RfRouteData.Orien =  prfdata[6];
+  routepacket->RfRouteData.CRPL =  prfdata[7];
   
   // 对路由数据进行处理  Orien 由1开始 0101 xxxx 为终端到基站
   routedatalength = ( (routepacket->RfRouteData.Orien & 0x0F)-1)*2;
-  routepacket->RfRouteData.Orien =  prfdata[6];
-  routepacket->RfRouteData.CRPL =  prfdata[7];
   // 当路由深度为0时，pRouteData不指向数组
   if( routedatalength != 0 )
     routepacket->RfRouteData.pRouteData = &prfdata[8];     					 // 应该将数据放到传入的
@@ -526,6 +560,7 @@ INT8U CheckRouteData(INT8U *prfdata,Rf_Route* routepacket)
   routepacket->Src.Sn[1] = prfdata[routeprotocol+2];
   routepacket->Des.Sn[0] = prfdata[routeprotocol+3];
   routepacket->Des.Sn[1] = prfdata[routeprotocol+4];
+  
   // 数据段长度
   datalength = routepacket->Length - ( routedatalength+2 ) - 4 - 5;  // 传感器数据长度
   if( datalength != 0 )
@@ -544,8 +579,15 @@ INT8U CheckRouteData(INT8U *prfdata,Rf_Route* routepacket)
 	Usart_printf(&checknum,1);
 	Log_printf("    ");	
 	
-	
-	
+  
+  
+  
+//  Usart_printf(&(routepacket->Des.Sn[0]),1);
+//  Usart_printf(&(routepacket->Des.Sn[1]),1);
+//  Log_printf("    ");
+//  Usart_printf(&(prfdata[routeprotocol+3]),1);
+//  Usart_printf(&(prfdata[routeprotocol+4]),1);	
+//	Log_printf("    ");
 	return RidSrcCheck(routepacket);
 	// 收到自身数据，不进行处理
 //	if( routepacket->Src.Sn_temp != g_module_id.Sn_temp )
@@ -560,6 +602,7 @@ INT8U CheckRouteData(INT8U *prfdata,Rf_Route* routepacket)
 
 void RfRouteManage(Rf_Route* routepacket)
 {
+	int i=0;
 	// 注释掉 为了测试
 
 		//Log_printf("  0001  ");
@@ -575,11 +618,24 @@ void RfRouteManage(Rf_Route* routepacket)
 		    case 0x03:
 		    	Log_printf("  Read data  ");
 		    	// 加入传感器数据长度
-		    	routepacket->Length += 3;
+		    	routepacket->Length += 4;
 		    	// 加入传感器数据
 		    	routepacket->pSensorData = SensorData;
 		    	routepacket->Key = 0x83;
 		    	AckARL(routepacket,RfSentBuf);
+//测试AckARL		   
+//					routepacket->Length = 0x10;
+//		    	RfSentBuf[0] = 0xAA;
+//		    	RfSentBuf[1] = routepacket->Length;
+//		    		//测试部分
+//					for ( i=2; i<routepacket->Length+2; i++)
+//					{
+//						RfSentBuf[i] = 0x00;
+//					}
+//					RfSentBuf[routepacket->Length+2] = 0xFF;
+//		    	halRfSendPacket(RfSentBuf,routepacket->Length+3);		    	
+		    	
+		    	
 //		    	Usart_printf(&WorCarry[0],1);
 //		    	Usart_printf(&WorCarry[1],1);
 //		    	Log_printf("  ");

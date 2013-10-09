@@ -21,7 +21,7 @@ INT8U TxBuf[64];	 			// 11字节, 如果需要更长的数据包,请正确设置
 //INT8U RxBuf[64];
 INT8U RfSentBuf[64];
 INT8U RfRecBuf[64];
-INT8U	SensorData[20]={0xFF,0xFF,0xFF,0xFF};		// 传感器数据
+INT8U	SensorData[20]={0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};		// 传感器数据
 Rf_Route rf_route_data;
 INT16U g_pre_src;
 INT8U g_module_rpl = 0x01;
