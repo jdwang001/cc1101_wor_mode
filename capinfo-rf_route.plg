@@ -1,0 +1,25 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Project:</h2>
+C:\Users\Õı÷Æ∂∞\Documents\Gitproject\capinfo-rf_route\capinfo-rf_route.uvproj
+Project File Date:  08/13/2013
+
+<h2>Output:</h2>
+Build target 'rf_route'
+compiling cc1101.c...
+CC1101.C(97): warning C280: 'i': unreferenced local variable
+compiling mcu_config.c...
+compiling rf_config.c...
+RF_CONFIG.C(293): warning C280: 'rxBuffer': unreferenced local variable
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_LOG_PRINTF?MCU_CONFIG
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_HALRFRECEIVEPACKET?RF_CONFIG
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_CC1101_INITWOR?RF_CONFIG
+Program Size: data=9.0 xdata=227 code=2833
+creating hex file from ".\output\capinfo-rf_route"...
+".\output\capinfo-rf_route" - 0 Error(s), 5 Warning(s).

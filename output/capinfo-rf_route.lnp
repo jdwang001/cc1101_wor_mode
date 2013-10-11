@@ -1,0 +1,6 @@
+".\output\mcu_config.obj",
+".\output\rf_config.obj",
+".\output\main.obj",
+".\output\rf_route.obj" 
+TO ".\output\capinfo-rf_route" 
+PRINT(".\listing\capinfo-rf_route.m51") RAMSIZE(256) 

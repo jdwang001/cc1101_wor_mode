@@ -1,0 +1,988 @@
+C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE RF_CONFIG
+OBJECT MODULE PLACED IN .\output\rf_config.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE rf_config.c LARGE BROWSE DEBUG OBJECTEXTEND PRINT(.\listing\rf_config.lst) 
+                    -TABS(2) OBJECT(.\output\rf_config.obj)
+
+line level    source
+
+   1          // Filename:  rf_config.c
+   2          // Function:  rfµ×²ãÇý¶¯
+   3          // Author:    wzd
+   4          // Date:      2013Äê8ÔÂ15ÈÕ10:21:25
+   5          
+   6          
+   7          #include "rf_config.h"
+   8          
+   9          /*****************************************************************************************
+  10          //º¯ÊýÃû£ºvoid halWait(INT16U timeout) 
+  11          //ÊäÈë£ºÎÞ
+  12          //Êä³ö£ºÎÞ
+  13          //¹¦ÄÜÃèÊö£ºrf²Ù×÷ÖÐµÄÑÓÊ±º¯Êý
+  14          /*****************************************************************************************/
+  15          void halWait(INT16U timeout) 
+  16          {
+  17   1          do 
+  18   1          {
+  19   2              _nop_();
+  20   2              _nop_();
+  21   2              _nop_();
+  22   2              _nop_();
+  23   2              _nop_();
+  24   2              _nop_();
+  25   2              _nop_();
+  26   2              _nop_();
+  27   2              _nop_();
+  28   2              _nop_();
+  29   2              _nop_();
+  30   2              _nop_();
+  31   2              _nop_();
+  32   2              _nop_();
+  33   2              _nop_(); 
+  34   2          } 
+  35   1          while (--timeout);
+  36   1      }
+  37          
+  38          //*****************************************************************************************
+  39          //º¯ÊýÃû£ºvoid RESET_CC1100(void)
+  40          //ÊäÈë£ºÎÞ
+  41          //Êä³ö£ºÎÞ
+  42          //¹¦ÄÜÃèÊö£º¸´Î»CC1100
+  43          //*****************************************************************************************
+  44          void RESET_CC1100(void) 
+  45          {
+  46   1          CSN = 0; 
+  47   1          while (MISO);
+  48   1          SpiTxRxByte(CCxxx0_SRES);     //Ð´Èë¸´Î»ÃüÁî
+  49   1          while (MISO); 
+  50   1          CSN = 1; 
+  51   1      }
+  52          
+  53          //*****************************************************************************************
+  54          //º¯ÊýÃû£ºvoid POWER_UP_RESET_CC1100(void) 
+C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 2   
+
+  55          //ÊäÈë£ºÎÞ
+  56          //Êä³ö£ºÎÞ
+  57          //¹¦ÄÜÃèÊö£ºÉÏµç¸´Î»CC1100
+  58          //*****************************************************************************************
+  59          void POWER_UP_RESET_CC1100(void) 
+  60          {
+  61   1          CSN = 1; 
+  62   1          halWait(10); 
+  63   1          CSN = 0; 
+  64   1          halWait(10); 
+  65   1          CSN = 1; 
+  66   1          halWait(410); 
+  67   1          RESET_CC1100();       //¸´Î»CC1100
+  68   1      }
+  69          
+  70          //*****************************************************************************************
+  71          //º¯ÊýÃû£ºvoid halSpiWriteReg(INT8U addr, INT8U value)
+  72          //ÊäÈë£ºµØÖ·ºÍÅäÖÃ×Ö
+  73          //Êä³ö£ºÎÞ
+  74          //¹¦ÄÜÃèÊö£ºSPIÐ´¼Ä´æÆ÷
+  75          //*****************************************************************************************
+  76          void halSpiWriteReg(INT8U addr, INT8U value) 
+  77          {
+  78   1          CSN = 0;
+  79   1          while (MISO);
+  80   1          SpiTxRxByte(addr);    //Ð´µØÖ·
+  81   1          SpiTxRxByte(value);   //Ð´ÈëÅäÖÃ
+  82   1          CSN = 1;
+  83   1      }
+  84          
+  85          //*****************************************************************************************
+  86          //º¯ÊýÃû£ºvoid halSpiWriteBurstReg(INT8U addr, INT8U *buffer, INT8U count)
+  87          //ÊäÈë£ºµØÖ·£¬Ð´Èë»º³åÇø£¬Ð´Èë¸öÊý
+  88          //Êä³ö£ºÎÞ
+  89          //¹¦ÄÜÃèÊö£ºSPIÁ¬ÐøÐ´ÅäÖÃ¼Ä´æÆ÷
+  90          //*****************************************************************************************
+  91          void halSpiWriteBurstReg(INT8U addr, INT8U *buffer, INT8U count) 
+  92          {
+  93   1          INT8U i, temp;
+  94   1          temp = addr | WRITE_BURST;      //ÖÃÎ»Í»·¢Î»£¬½øÐÐÍ»·¢´æÈ¡
+  95   1          CSN = 0;                        //¿ªÊ¼Í»·¢´æÈ¡
+  96   1          while (MISO);
+  97   1          SpiTxRxByte(temp);
+  98   1          for (i = 0; i < count; i++)
+  99   1          {
+ 100   2              SpiTxRxByte(buffer[i]);
+ 101   2          }
+ 102   1          CSN = 1;                        //Í¨¹ýÖÃ¸ßCSNÀ´ÖÕÖ¹Í»·¢´æÈ¡
+ 103   1      }
+ 104          
+ 105          //*****************************************************************************************
+ 106          //º¯ÊýÃû£ºvoid halSpiStrobe(INT8U strobe)
+ 107          //ÊäÈë£ºÃüÁî
+ 108          //Êä³ö£ºÎÞ
+ 109          //¹¦ÄÜÃèÊö£ºSPIÐ´ÃüÁî
+ 110          //*****************************************************************************************
+ 111          void halSpiStrobe(INT8U strobe) 
+ 112          {
+ 113   1          CSN = 0;
+ 114   1          while (MISO);
+ 115   1          SpiTxRxByte(strobe);    //Ð´ÈëÃüÁî
+ 116   1          CSN = 1;
+C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 3   
+
+ 117   1      }
+ 118          
+ 119          //*****************************************************************************************
+ 120          //º¯ÊýÃû£ºINT8U halSpiReadReg(INT8U addr)
+ 121          //ÊäÈë£ºµØÖ·
+ 122          //Êä³ö£º¸Ã¼Ä´æÆ÷µÄÅäÖÃ×Ö
+ 123          //¹¦ÄÜÃèÊö£ºSPI¶Á¼Ä´æÆ÷
+ 124          //*****************************************************************************************
+ 125          INT8U halSpiReadReg(INT8U addr) 
+ 126          {
+ 127   1          INT8U temp, value;
+ 128   1          temp = addr|READ_SINGLE;//¶Á¼Ä´æÆ÷ÃüÁî
+ 129   1          CSN = 0;
+ 130   1          while (MISO);
+ 131   1          SpiTxRxByte(temp);
+ 132   1          value = SpiTxRxByte(0);
+ 133   1          CSN = 1;
+ 134   1          return value;
+ 135   1      }
+ 136          
+ 137          //*****************************************************************************************
+ 138          //º¯ÊýÃû£ºvoid halSpiReadBurstReg(INT8U addr, INT8U *buffer, INT8U count)
+ 139          //ÊäÈë£ºµØÖ·£¬¶Á³öÊý¾ÝºóÔÝ´æµÄ»º³åÇø£¬¶Á³öÅäÖÃ¸öÊý
+ 140          //Êä³ö£ºÎÞ
+ 141          //¹¦ÄÜÃèÊö£ºSPIÁ¬ÐøÐ´ÅäÖÃ¼Ä´æÆ÷
+ 142          //*****************************************************************************************
+ 143          void halSpiReadBurstReg(INT8U addr, INT8U *buffer, INT8U count) 
+ 144          {
+ 145   1          INT8U i,temp;
+ 146   1          temp = addr | READ_BURST;   //Ð´ÈëÒª¶ÁµÄÅäÖÃ¼Ä´æÆ÷µØÖ·ºÍ¶ÁÃüÁî
+ 147   1          CSN = 0;
+ 148   1          while (MISO);
+ 149   1          SpiTxRxByte(temp);   
+ 150   1          for (i = 0; i < count; i++) 
+ 151   1          {
+ 152   2              buffer[i] = SpiTxRxByte(0);
+ 153   2          }
+ 154   1          CSN = 1;
+ 155   1      }
+ 156          
+ 157          //*****************************************************************************************
+ 158          //º¯ÊýÃû£ºINT8U halSpiReadReg(INT8U addr)
+ 159          //ÊäÈë£ºµØÖ·
+ 160          //Êä³ö£º¸Ã×´Ì¬¼Ä´æÆ÷µ±Ç°Öµ
+ 161          //¹¦ÄÜÃèÊö£ºSPI¶Á×´Ì¬¼Ä´æÆ÷
+ 162          //*****************************************************************************************
+ 163          INT8U halSpiReadStatus(INT8U addr) 
+ 164          {
+ 165   1          INT8U value,temp;
+ 166   1          temp = addr | READ_BURST;   //Ð´ÈëÒª¶ÁµÄ×´Ì¬¼Ä´æÆ÷µÄµØÖ·Í¬Ê±Ð´Èë¶ÁÃüÁî
+ 167   1          CSN = 0;
+ 168   1          while (MISO);
+ 169   1          SpiTxRxByte(temp);
+ 170   1          value = SpiTxRxByte(0);
+ 171   1          CSN = 1;
+ 172   1          return value;
+ 173   1      }
+ 174          //INT8U halSpiReadStatus(INT8U addr) 
+ 175          //{
+ 176          //    INT8U value,temp;
+ 177          //    temp = addr | READ_SINGLE;    //Ð´ÈëÒª¶ÁµÄ×´Ì¬¼Ä´æÆ÷µÄµØÖ·Í¬Ê±Ð´Èë¶ÁÃüÁî
+ 178          //    CSN = 0;
+C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 4   
+
+ 179          //    while (MISO);
+ 180          //    SpiTxRxByte(temp);
+ 181          //    value = SpiTxRxByte(0);
+ 182          //    CSN = 1;
+ 183          //    return value;
+ 184          //}
+ 185          
+ 186          //*****************************************************************************************
+ 187          //º¯ÊýÃû£ºvoid halRfWriteRfSettings(RF_SETTINGS *pRfSettings)
+ 188          //ÊäÈë£ºÎÞ
+ 189          //Êä³ö£ºÎÞ
+ 190          //¹¦ÄÜÃèÊö£ºÅäÖÃCC1100µÄ¼Ä´æÆ÷
+ 191          //*****************************************************************************************
+ 192          void halRfWriteRfSettings(void) 
+ 193          {
+ 194   1          halSpiWriteReg(CCxxx0_IOCFG2,   rfSettings.IOCFG2);
+ 195   1          halSpiWriteReg(CCxxx0_IOCFG0,   rfSettings.IOCFG0); 
+ 196   1          
+ 197   1          halSpiWriteReg(CCxxx0_FSCTRL0,  rfSettings.FSCTRL2);//×ÔÒÑ¼ÓµÄ
+ 198   1          // Write register settings
+ 199   1          halSpiWriteReg(CCxxx0_FSCTRL1,  rfSettings.FSCTRL1);
+ 200   1          halSpiWriteReg(CCxxx0_FSCTRL0,  rfSettings.FSCTRL0);
+ 201   1          halSpiWriteReg(CCxxx0_FREQ2,    rfSettings.FREQ2);
+ 202   1          halSpiWriteReg(CCxxx0_FREQ1,    rfSettings.FREQ1);
+ 203   1          halSpiWriteReg(CCxxx0_FREQ0,    rfSettings.FREQ0);
+ 204   1          halSpiWriteReg(CCxxx0_MDMCFG4,  rfSettings.MDMCFG4);
+ 205   1          halSpiWriteReg(CCxxx0_MDMCFG3,  rfSettings.MDMCFG3);
+ 206   1          halSpiWriteReg(CCxxx0_MDMCFG2,  rfSettings.MDMCFG2);
+ 207   1          halSpiWriteReg(CCxxx0_MDMCFG1,  rfSettings.MDMCFG1);
+ 208   1          halSpiWriteReg(CCxxx0_MDMCFG0,  rfSettings.MDMCFG0);
+ 209   1          halSpiWriteReg(CCxxx0_CHANNR,   rfSettings.CHANNR);
+ 210   1          halSpiWriteReg(CCxxx0_DEVIATN,  rfSettings.DEVIATN);
+ 211   1          halSpiWriteReg(CCxxx0_FREND1,   rfSettings.FREND1);
+ 212   1          halSpiWriteReg(CCxxx0_FREND0,   rfSettings.FREND0);
+ 213   1          halSpiWriteReg(CCxxx0_MCSM0 ,   rfSettings.MCSM0 );
+ 214   1          halSpiWriteReg(CCxxx0_FOCCFG,   rfSettings.FOCCFG);
+ 215   1          halSpiWriteReg(CCxxx0_BSCFG,    rfSettings.BSCFG);
+ 216   1          halSpiWriteReg(CCxxx0_AGCCTRL2, rfSettings.AGCCTRL2);
+ 217   1          halSpiWriteReg(CCxxx0_AGCCTRL1, rfSettings.AGCCTRL1);
+ 218   1          halSpiWriteReg(CCxxx0_AGCCTRL0, rfSettings.AGCCTRL0);
+ 219   1          halSpiWriteReg(CCxxx0_FSCAL3,   rfSettings.FSCAL3);
+ 220   1          halSpiWriteReg(CCxxx0_FSCAL2,   rfSettings.FSCAL2);
+ 221   1          halSpiWriteReg(CCxxx0_FSCAL1,   rfSettings.FSCAL1);
+ 222   1          halSpiWriteReg(CCxxx0_FSCAL0,   rfSettings.FSCAL0);
+ 223   1          halSpiWriteReg(CCxxx0_FSTEST,   rfSettings.FSTEST);
+ 224   1          halSpiWriteReg(CCxxx0_TEST2,    rfSettings.TEST2);
+ 225   1          halSpiWriteReg(CCxxx0_TEST1,    rfSettings.TEST1);
+ 226   1          halSpiWriteReg(CCxxx0_TEST0,    rfSettings.TEST0);
+ 227   1         
+ 228   1          halSpiWriteReg(CCxxx0_PKTCTRL1, rfSettings.PKTCTRL1);
+ 229   1          halSpiWriteReg(CCxxx0_PKTCTRL0, rfSettings.PKTCTRL0);
+ 230   1          halSpiWriteReg(CCxxx0_ADDR,     rfSettings.ADDR);
+ 231   1          halSpiWriteReg(CCxxx0_PKTLEN,   rfSettings.PKTLEN);
+ 232   1      }
+ 233          
+ 234          //*****************************************************************************************
+ 235          //º¯ÊýÃû£ºvoid halRfSendPacket(INT8U *txBuffer, INT8U size)
+ 236          //ÊäÈë£º·¢ËÍµÄ»º³åÇø£¬·¢ËÍÊý¾Ý¸öÊý
+ 237          //Êä³ö£ºÎÞ
+ 238          //¹¦ÄÜÃèÊö£ºCC1101·¢ËÍÒ»×éÊý¾Ý
+ 239          //*****************************************************************************************
+ 240          void halRfSendPacket(INT8U *txBuffer, INT8U size) 
+C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 5   
+
+ 241          {
+ 242   1          INT8U registerstatus;
+ 243   1          // ÅäÖÃÁËIOCFG0.GDO0_CFG=0x06 ·¢ËÍ/½ÓÊÕµ½Í¬²½×ÖÊ±ÖÃÎ»£¬²¢ÔÚÊý¾Ý°üµÄÄ©Î²È¡ÏûÖÃÎ»
+ 244   1          //INT1_OFF;
+ 245   1          // Ê×´Î³õÊ¼»¯£¬¿ªÆô¿É±äÊý¾Ý°ü³¤¶È£¬³¤¶È×Ö½Ú±»Ê×ÏÈÐ´Èë£¬Ã»ÓÐ¿ªÆôµØÖ·Ê¶±ð£¬µÚ¶þ¸ö×Ö½ÚÎÞÐèÐ´ÈëADR
+ 246   1          halSpiWriteReg(CCxxx0_TXFIFO, size);
+ 247   1          halSpiWriteBurstReg(CCxxx0_TXFIFO, txBuffer, size); //Ð´ÈëÒª·¢ËÍµÄÊý¾Ý
+ 248   1          
+ 249   1          registerstatus = halSpiReadStatus(CCxxx0_TXBYTES);
+ 250   1          Usart_printf(&registerstatus,1);
+ 251   1          
+ 252   1          halSpiStrobe(CCxxx0_STX);   //½øÈë·¢ËÍÄ£Ê½·¢ËÍÊý¾Ý
+ 253   1          
+ 254   1          // Wait for GDO0 to be set -> sync transmitted
+ 255   1          while (!GDO0);
+ 256   1          // Wait for GDO0 to be cleared -> end of packet ¶øºóÇÐ»»µ½IDLEÄ£Ê½
+ 257   1          while (GDO0);
+ 258   1          // ·¢ËÍÖ¸Áî£¬Çå³ýTX_FIFO
+ 259   1          halSpiStrobe(CCxxx0_SFTX);
+ 260   1          //INT1_ON;
+ 261   1      }
+ 262          
+ 263          //*****************************************************************************************
+ 264          //º¯ÊýÃû£ºINT8U halRfReceivePacket(INT8U *rxBuffer, INT8U *length) 
+ 265          //ÊäÈë£ºINT8U *rxBuffer ÎÞÏß½ÓÊÕÊý¾Ý£¬INT8U *length ½ÓÊÕ×Ö½ÚÊý
+ 266          //Êä³ö£º·µ»Ø½ÓÊÕµ½µÄ×Ö½ÚÊý
+ 267          //¹¦ÄÜÃèÊö£ºCC1101½«½ÓÊÕµ½µÄÎÞÏßÊý¾Ý´æ´¢µ½*rxBufferÖ¸ÏòµÄÊý×éÖÐ
+ 268          //*****************************************************************************************
+ 269          INT8U halRfReceivePacket(INT8U *rxBuffer, INT8U *length) 
+ 270          {
+ 271   1          INT8U status[2];
+ 272   1          INT8U packetLength;
+ 273   1          INT8U i=(*length)*4;  // ¾ßÌå¶àÉÙÒª¸ù¾ÝdatarateºÍlengthÀ´¾ö¶¨
+ 274   1          
+ 275   1          //Log_printf("Enter rx  ");
+ 276   1          halSpiStrobe(CCxxx0_SRX);   //½øÈë½ÓÊÕ×´Ì¬
+ 277   1          //delay(5);
+ 278   1          //while (!GDO1);
+ 279   1          //while (GDO1);
+ 280   1          delay(20);
+ 281   1          while (GDO0)
+ 282   1          {
+ 283   2              delay(20);
+ 284   2              --i;
+ 285   2              if(i<1)
+ 286   2                {
+ 287   3                  //Log_printf("Enter rx time out  ");
+ 288   3                  return 0;    
+ 289   3                 }   
+ 290   2          }  
+ 291   1          
+ 292   1          // CCxxx0_RXBYTES RX_FIFOµÄ×Ö½ÚÊý
+ 293   1          if ((halSpiReadStatus(CCxxx0_RXBYTES) & BYTES_IN_RXFIFO)) //Èç¹û½ÓµÄ×Ö½ÚÊý²»Îª0
+ 294   1          {
+ 295   2              packetLength = halSpiReadReg(CCxxx0_RXFIFO);//¶Á³öµÚÒ»¸ö×Ö½Ú£¬´Ë×Ö½ÚÎª¸ÃÖ¡Êý¾Ý³¤¶È
+ 296   2        
+ 297   2              //²âÊÔ³ÌÐò
+ 298   2              //Usart_printf(&packetLength,1);
+ 299   2      
+ 300   2              if (packetLength <= *length)    //Èç¹ûËùÒªµÄÓÐÐ§Êý¾Ý³¤¶ÈÐ¡ÓÚµÈÓÚ½ÓÊÕµ½µÄÊý¾Ý°üµÄ³¤¶È
+ 301   2              {
+ 302   3                //Log_printf("rx data  ");
+C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 6   
+
+ 303   3                  halSpiReadBurstReg(CCxxx0_RXFIFO, rxBuffer, packetLength); //¶Á³öËùÓÐ½ÓÊÕµ½µÄÊý¾Ý
+ 304   3                  *length = packetLength;       //°Ñ½ÓÊÕÊý¾Ý³¤¶ÈµÄÐÞ¸ÄÎªµ±Ç°Êý¾ÝµÄ³¤¶È
+ 305   3                  //g_rf_receive_flag = 0x55;
+ 306   3                  Usart_printf(rxBuffer,packetLength);
+ 307   3      
+ 308   3                  // Read the 2 appended status bytes (status[0] = RSSI, status[1] = LQI)
+ 309   3                  halSpiReadBurstReg(CCxxx0_RXFIFO, status, 2);   //¶Á³öCRCÐ£ÑéÎ»
+ 310   3                  halSpiStrobe(CCxxx0_SFRX);    //ÇåÏ´½ÓÊÕ»º³åÇø
+ 311   3                  return (status[1] & CRC_OK);      //Èç¹ûÐ£Ñé³É¹¦·µ»Ø½ÓÊÕ³É¹¦
+ 312   3              }
+ 313   2              else 
+ 314   2              {
+ 315   3                //Log_printf("length big  ");
+ 316   3                  *length = packetLength;
+ 317   3                  halSpiStrobe(CCxxx0_SFRX);    //ÇåÏ´½ÓÊÕ»º³åÇø
+ 318   3                  return 0;
+ 319   3              }
+ 320   2          } 
+ 321   1          else
+ 322   1            {
+ 323   2              //Log_printf("packet 0  ");
+ 324   2              return 0;
+ 325   2            }
+ 326   1      }
+ 327          
+ 328          //*****************************************************************************************
+ 329          //º¯ÊýÃû£ºINT8U CC1101_EnterRx(INT8U *rxBuffer) 
+ 330          //ÊäÈë£ºINT8U *rxBuffer ÎÞÏß½ÓÊÕÊý¾Ý
+ 331          //Êä³ö£º·µ»Ø½ÓÊÕµ½µÄ×Ö½ÚÊý
+ 332          //¹¦ÄÜÃèÊö£º½øÈëÈ«ËÙ´¦ÀíÄ£Ê½£¬ÌáÈ¡Êý¾ÝÖ¡
+ 333          //*****************************************************************************************
+ 334          //INT8U CC1101_EnterRx(INT8U *rxBuffer) 
+ 335          //{
+ 336          //    INT8U status[2],wor_data[2];
+ 337          //    INT8U packetLength=0;
+ 338          //
+ 339          //    halSpiStrobe(CCxxx0_SRX);   //½øÈë½ÓÊÕ×´Ì¬ 
+ 340          //    if ((halSpiReadStatus(CCxxx0_RXBYTES) & BYTES_IN_RXFIFO)) //Èç¹û½ÓµÄ×Ö½ÚÊý²»Îª0
+ 341          //    {
+ 342          //        packetLength = halSpiReadReg(CCxxx0_RXFIFO);//¶Á³öµÚÒ»¸ö×Ö½Ú£¬´Ë×Ö½ÚÎª¸ÃÖ¡Êý¾Ý³¤¶È
+ 343          //        //delay(100);
+ 344          //        Usart_printf(&packetLength,1);
+ 345          //    
+ 346          //        if ( packetLength > 2 ) 
+ 347          //        {   
+ 348          //            halSpiReadBurstReg(CCxxx0_RXFIFO, rxBuffer, packetLength); //¶Á³öËùÓÐ½ÓÊÕµ½µÄÊý¾Ý
+ 349          //            //*length = packetLength;       //°Ñ½ÓÊÕÊý¾Ý³¤¶ÈµÄÐÞ¸ÄÎªµ±Ç°Êý¾ÝµÄ³¤¶È
+ 350          //            //Usart_printf(rxBuffer,packetLength);
+ 351          //            // Read the 2 appended status bytes (status[0] = RSSI, status[1] = LQI)
+ 352          //            halSpiReadBurstReg(CCxxx0_RXFIFO, status, 2);   //¶Á³öCRCÐ£ÑéÎ»
+ 353          //            halSpiStrobe(CCxxx0_SFRX);    //ÇåÏ´½ÓÊÕ»º³åÇø
+ 354          //            //return (status[1] & CRC_OK);      //Èç¹ûÐ£Ñé³É¹¦·µ»Ø½ÓÊÕ³É¹¦
+ 355          //            if( status[1] & CRC_OK )
+ 356          //            {
+ 357          //              Usart_printf(rxBuffer,packetLength);
+ 358          //              // £¿£¿£¿£¿£¿£¿£¿£¿£¿£¿£¿£¿£¿£¿´Ë´¦Ôö¼Ó½ÓÊÕÊý¾ÝÐ£Ñé£¬ÅÐ¶ÏÊÇ·ñÎª±¾ÌõÊý¾ÝµÄÖ¡£¬¶øºó£¬ËÍÓèÂ·ÓÉÂß
+             -¼­½øÐÐ´¦Àí
+ 359          //              // £¿£¿£¿£¿£¿£¿£¿£¿£¿£¿£¿£¿£¿£¿
+ 360          //              return packetLength;
+ 361          //            }
+ 362          //            else
+ 363          //            { 
+C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 7   
+
+ 364          //              return 0;
+ 365          //            }
+ 366          //        }
+ 367          //
+ 368          //        if ( packetLength == 2 )                                    //Èç¹ûËùÒªµÄÓÐÐ§Êý¾Ý³¤¶ÈµÈÓÚ½ÓÊÕµ½µÄÊý¾Ý°üµÄ³¤¶È
+ 369          //        {
+ 370          //            halSpiReadBurstReg(CCxxx0_RXFIFO, wor_data, packetLength);  //¶Á³öËùÓÐ½ÓÊÕµ½µÄÊý¾Ý
+ 371          //            
+ 372          //            if ( (wor_data[0]==BROADCAST && wor_data[1]==BROADCAST) || ( (wor_data[0]==g_module_id) && (wor_da
+             -ta[1]==g_module_id>>8) ) )
+ 373          //            {
+ 374          //              //Log_printf("Enter Rx\n");
+ 375          //              Usart_printf(wor_data,2);
+ 376          //              // Read the 2 appended status bytes (status[0] = RSSI, status[1] = LQI)
+ 377          //              halSpiReadBurstReg(CCxxx0_RXFIFO, status, 2);             //¶Á³öCRCÐ£ÑéÎ»
+ 378          //              halSpiStrobe(CCxxx0_SFRX);                                //ÇåÏ´½ÓÊÕ»º³åÇø
+ 379          //              if(status[1] & CRC_OK)
+ 380          //              {
+ 381          //                halSpiStrobe(CCxxx0_SFRX); 
+ 382          //                g_rf_rx_flag = 0x55;                                  // ±êÖ¾ÖÃÎ»ºó£¬½øÈëÈ«ËÙ½ÓÊÕÄ£Ê½
+ 383          //                Timer0_Init(1);
+ 384          //                TIMER0_ON;                                            // ¿ªÆô¶¨Ê±Æ÷0 ¶¨Ê±1s                                       // ¿ªÆô¶¨Ê±Æ÷0 ¶¨Ê±1s
+ 385          //                return packetLength;
+ 386          //              }
+ 387          //              else
+ 388          //              {
+ 389          //                
+ 390          //                Log_printf("CRC error\n");
+ 391          //              }             
+ 392          //            }
+ 393          //            else
+ 394          //            {
+ 395          //              Usart_printf(wor_data,2);
+ 396          //              Log_printf("  why Not me\n"); 
+ 397          //            }
+ 398          //        }
+ 399          //
+ 400          //        //*length = packetLength;
+ 401          //        halSpiStrobe(CCxxx0_SFRX);    //ÇåÏ´½ÓÊÕ»º³åÇø
+ 402          //        return 0;
+ 403          //    } 
+ 404          //    else
+ 405          //        return 0;
+ 406          //}
+ 407          
+ 408          INT8U halRfRxPacket(INT8U *rxBuffer) 
+ 409          {
+ 410   1          INT8U status[2],wor_data[2];
+ 411   1          INT8U packetLength=0;
+ 412   1          INT8U checknum=0,i=0;
+ 413   1          //INT8U i=(*length)*4;                                            // ¾ßÌå¶àÉÙÒª¸ù¾ÝdatarateºÍlengthÀ´¾ö¶¨
+ 414   1      
+ 415   1          halSpiStrobe(CCxxx0_SRX);                                         // ½øÈë½ÓÊÕ×´Ì¬
+ 416   1      
+ 417   1          if ((halSpiReadStatus(CCxxx0_RXBYTES) & BYTES_IN_RXFIFO))         // Èç¹û½ÓµÄ×Ö½ÚÊý²»Îª0
+ 418   1          {
+ 419   2              packetLength = halSpiReadReg(CCxxx0_RXFIFO);                  // ¶Á³öµÚÒ»¸ö×Ö½Ú£¬´Ë×Ö½ÚÎª¸ÃÖ¡Êý¾Ý³¤¶È
+ 420   2              delay(100);
+ 421   2              //Usart_printf(&packetLength,1);
+ 422   2          
+ 423   2            if ( packetLength > 2 ) 
+ 424   2            {   
+C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 8   
+
+ 425   3                halSpiReadBurstReg(CCxxx0_RXFIFO, rxBuffer, packetLength);  // ¶Á³öËùÓÐ½ÓÊÕµ½µÄÊý¾Ý
+ 426   3                //*length = packetLength;                                   // °Ñ½ÓÊÕÊý¾Ý³¤¶ÈµÄÐÞ¸ÄÎªµ±Ç°Êý¾ÝµÄ³¤¶È
+ 427   3                //Usart_printf(rxBuffer,packetLength);
+ 428   3                // Read the 2 appended status bytes (status[0] = RSSI, status[1] = LQI)
+ 429   3                halSpiReadBurstReg(CCxxx0_RXFIFO, status, 2);               // ¶Á³öCRCÐ£ÑéÎ»
+ 430   3                halSpiStrobe(CCxxx0_SFRX);                                  // ÇåÏ´½ÓÊÕ»º³åÇø
+ 431   3                //return (status[1] & CRC_OK);                              // Èç¹ûÐ£Ñé³É¹¦·µ»Ø½ÓÊÕ³É¹¦
+ 432   3                if( status[1] & CRC_OK )
+ 433   3                {
+ 434   4                  //TIMER0_OFF;                                             // ¹Ø±Õ¶¨Ê±Æ÷
+ 435   4                  //g_wor_flag = 0x00;                                      // ½ÓÊÕµ½Êý¾Ýºó£¬ÍË³öÈ«ËÙ½ÓÊÕÄ£Ê½
+ 436   4                  
+ 437   4                  if( 0xAA != rxBuffer[1])
+ 438   4                  {
+ 439   5                  // ¼ÆËãÐ£ÑéºÍ
+ 440   5                    for( i=0;i<packetLength-1;i++)
+ 441   5                    {
+ 442   6                      checknum += rxBuffer[i];
+ 443   6                    }
+ 444   5                    
+ 445   5                    if ( checknum == rxBuffer[packetLength-1] )
+ 446   5                    {
+ 447   6                      // ¼ì²âµ½×ª·¢Êý¾Ý£¬²»»á½øÈë½ÓÊÕ
+ 448   6                      if( CheckRouteData(rxBuffer,&rf_route_data) )
+ 449   6                      {
+ 450   7                        //Log_printf("Check ok\n");
+ 451   7                        g_enter_rx = 0x00;                                  // ÊÕµ½Êý¾Ý¾ÍÍË³ö½ÓÊÕÄ£Ê½
+ 452   7                        g_rf_rx_flag = 0x55;                                // ¶øºó½øÈëÂ·ÓÉÊý¾Ý´¦ÀíÄ£Ê½
+ 453   7                        //Usart_printf(rxBuffer,packetLength);
+ 454   7                        LED_D3 = ~LED_D3;
+ 455   7                        return packetLength;
+ 456   7                      }
+ 457   6                      else
+ 458   6                      {
+ 459   7                        Log_printf("  Is Me data  ");
+ 460   7                        return 0;
+ 461   7                      }
+ 462   6                    }
+ 463   5                    else
+ 464   5                    {
+ 465   6                      Usart_printf(rxBuffer,packetLength);
+ 466   6                      //halRfSendPacket(rxBuffer,packetLength); 
+ 467   6                      Log_printf("Error check\n");
+ 468   6                      return 0;
+ 469   6                    }
+ 470   5                  }
+ 471   4                  else 
+ 472   4                  {
+ 473   5                    Log_printf("Error protocol");
+ 474   5                  }
+ 475   4                }
+ 476   3                else
+ 477   3                { 
+ 478   4                  Log_printf("data CRC error\n");
+ 479   4                  return 0;
+ 480   4                }
+ 481   3            }
+ 482   2      
+ 483   2            if (packetLength == 2)                                          // Èç¹ûËùÒªµÄÓÐÐ§Êý¾Ý³¤¶ÈµÈÓÚ½ÓÊÕµ½µÄÊý¾Ý°üµÄ³¤¶È
+ 484   2            {
+ 485   3                halSpiReadBurstReg(CCxxx0_RXFIFO, wor_data, packetLength);  // ¶Á³öËùÓÐ½ÓÊÕµ½µÄÊý¾Ý
+ 486   3                if ( (wor_data[0]==BROADCAST && wor_data[1]==BROADCAST) || ( (wor_data[0]==(g_module_id.Sn[0]&MCU_ID)
+C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 9   
+
+             -) && (wor_data[1]==g_module_id.Sn[1]) ) )
+ 487   3                //if ( (wor_data[0]==0x55 && wor_data[1]==0xAA) || (wor_data[0]==g_module_id && wor_data[1]==g_module
+             -_id>>8) )
+ 488   3                {
+ 489   4                  //Log_printf("Enter wor\n");
+ 490   4                  // Read the 2 appended status bytes (status[0] = RSSI, status[1] = LQI)
+ 491   4                  halSpiReadBurstReg(CCxxx0_RXFIFO, status, 2);             // ¶Á³öCRCÐ£ÑéÎ»
+ 492   4                  halSpiStrobe(CCxxx0_SFRX);                                // ÇåÏ´½ÓÊÕ»º³åÇø
+ 493   4                  if(status[1] & CRC_OK)
+ 494   4                  {
+ 495   5                    halSpiStrobe(CCxxx0_SFRX);
+ 496   5                    timer = 0; 
+ 497   5                    Timer0_Init(1);
+ 498   5                    TIMER0_ON;                                              // ½ÓÊÕµ½»½ÐÑ²¨£¬¾ÍË¢ÐÂ¶¨Ê±Ê±¼ä£¬¶¨Ê±1s
+ 499   5                    //Log_printf("RX\n");
+ 500   5                    //Usart_printf(wor_data,packetLength);
+ 501   5                    return packetLength;
+ 502   5                  }
+ 503   4                  else
+ 504   4                  {
+ 505   5                    Log_printf("3 CRC error\n");
+ 506   5                  }             
+ 507   4                }
+ 508   3                else
+ 509   3                {
+ 510   4                  Usart_printf(wor_data,2);
+ 511   4                  Log_printf("  why Not me\n"); 
+ 512   4                }
+ 513   3            }        
+ 514   2      
+ 515   2              //*length = packetLength;
+ 516   2              //Log_printf("not 2 3\n");
+ 517   2              halSpiStrobe(CCxxx0_SFRX);    //ÇåÏ´½ÓÊÕ»º³åÇø
+ 518   2              return 0;
+ 519   2          } 
+ 520   1          else
+ 521   1              return 0;
+ 522   1      }
+ 523          
+ 524          //INT8U CC1101_EnterRx(INT8U *rxBuffer) 
+ 525          //{
+ 526          //    INT8U status[2],wor_data[2];
+ 527          //    INT8U packetLength=0;
+ 528          //
+ 529          //    halSpiStrobe(CCxxx0_SRX);   //½øÈë½ÓÊÕ×´Ì¬ 
+ 530          //    if ((halSpiReadStatus(CCxxx0_RXBYTES) & BYTES_IN_RXFIFO)) //Èç¹û½ÓµÄ×Ö½ÚÊý²»Îª0
+ 531          //    {
+ 532          //        packetLength = halSpiReadReg(CCxxx0_RXFIFO);//¶Á³öµÚÒ»¸ö×Ö½Ú£¬´Ë×Ö½ÚÎª¸ÃÖ¡Êý¾Ý³¤¶È
+ 533          //        //delay(100);
+ 534          //        Usart_printf(&packetLength,1);
+ 535          //    
+ 536          //        if ( packetLength > 2 ) 
+ 537          //        {   
+ 538          //            halSpiReadBurstReg(CCxxx0_RXFIFO, rxBuffer, packetLength); //¶Á³öËùÓÐ½ÓÊÕµ½µÄÊý¾Ý
+ 539          //            //*length = packetLength;       //°Ñ½ÓÊÕÊý¾Ý³¤¶ÈµÄÐÞ¸ÄÎªµ±Ç°Êý¾ÝµÄ³¤¶È
+ 540          //            //Usart_printf(rxBuffer,packetLength);
+ 541          //            // Read the 2 appended status bytes (status[0] = RSSI, status[1] = LQI)
+ 542          //            halSpiReadBurstReg(CCxxx0_RXFIFO, status, 2);   //¶Á³öCRCÐ£ÑéÎ»
+ 543          //            halSpiStrobe(CCxxx0_SFRX);    //ÇåÏ´½ÓÊÕ»º³åÇø
+ 544          //            //return (status[1] & CRC_OK);      //Èç¹ûÐ£Ñé³É¹¦·µ»Ø½ÓÊÕ³É¹¦
+ 545          //            if( status[1] & CRC_OK )
+ 546          //            {
+C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 10  
+
+ 547          //              Usart_printf(rxBuffer,packetLength);
+ 548          //              g_rf_rx_flag = 0x00;
+ 549          //              // £¿£¿£¿£¿£¿£¿£¿£¿£¿£¿£¿£¿£¿£¿´Ë´¦Ôö¼Ó½ÓÊÕÊý¾ÝÐ£Ñé£¬ÅÐ¶ÏÊÇ·ñÎª±¾ÌõÊý¾ÝµÄÖ¡£¬¶øºó£¬ËÍÓèÂ·ÓÉÂß
+             -¼­½øÐÐ´¦Àí
+ 550          //              // £¿£¿£¿£¿£¿£¿£¿£¿£¿£¿£¿£¿£¿£¿
+ 551          //              return packetLength;
+ 552          //            }
+ 553          //            else
+ 554          //            { 
+ 555          //              return 0;
+ 556          //            }
+ 557          //        }
+ 558          //
+ 559          //        if ( packetLength == 2 )                                    //Èç¹ûËùÒªµÄÓÐÐ§Êý¾Ý³¤¶ÈµÈÓÚ½ÓÊÕµ½µÄÊý¾Ý°üµÄ³¤¶È
+ 560          //        {
+ 561          //            halSpiReadBurstReg(CCxxx0_RXFIFO, wor_data, packetLength);  //¶Á³öËùÓÐ½ÓÊÕµ½µÄÊý¾Ý
+ 562          //            
+ 563          //            if ( (wor_data[0]==BROADCAST && wor_data[1]==BROADCAST) || ( (wor_data[0]==g_module_id) && (wor_da
+             -ta[1]==g_module_id>>8) ) )
+ 564          //            {
+ 565          //              //Log_printf("Enter Rx\n");
+ 566          //              Usart_printf(wor_data,2);
+ 567          //              // Read the 2 appended status bytes (status[0] = RSSI, status[1] = LQI)
+ 568          //              halSpiReadBurstReg(CCxxx0_RXFIFO, status, 2);             //¶Á³öCRCÐ£ÑéÎ»
+ 569          //              halSpiStrobe(CCxxx0_SFRX);                                //ÇåÏ´½ÓÊÕ»º³åÇø
+ 570          //              if(status[1] & CRC_OK)
+ 571          //              {
+ 572          //                halSpiStrobe(CCxxx0_SFRX); 
+ 573          //                g_rf_rx_flag = 0x55;                                  // ±êÖ¾ÖÃÎ»ºó£¬½øÈëÈ«ËÙ½ÓÊÕÄ£Ê½
+ 574          //                //Timer0_Init(1);
+ 575          //                //TIMER0_ON;                                            // ¿ªÆô¶¨Ê±Æ÷0 ¶¨Ê±1s                                       // ¿ªÆô¶¨Ê±Æ÷0 ¶¨Ê±1s
+ 576          //                return packetLength;
+ 577          //              }
+ 578          //              else
+ 579          //              {
+ 580          //                
+ 581          //                Log_printf("CRC error\n");
+ 582          //              }             
+ 583          //            }
+ 584          //            else
+ 585          //            {
+ 586          //              Usart_printf(wor_data,2);
+ 587          //              Log_printf("  why Not me\n"); 
+ 588          //            }
+ 589          //        }
+ 590          //
+ 591          //        //*length = packetLength;
+ 592          //        halSpiStrobe(CCxxx0_SFRX);    //ÇåÏ´½ÓÊÕ»º³åÇø
+ 593          //        return 0;
+ 594          //    } 
+ 595          //    else
+ 596          //        return 0;
+ 597          //}
+ 598          
+ 599          //*****************************************************************************************
+ 600          //º¯ÊýÃû£ºINT8U CC1101_Worwakeup(INT8U *rxBuffer, INT8U *length)  
+ 601          //ÊäÈë£ºINT8U *rxBuffer ÎÞÏß½ÓÊÕÊý¾Ý£¬INT8U *length ½ÓÊÕ×Ö½ÚÊý
+ 602          //Êä³ö£º·µ»Ø½ÓÊÕµ½µÄ×Ö½ÚÊý
+ 603          //¹¦ÄÜÃèÊö£ºCC1101½«½ÓÊÕµ½µÄÎÞÏßÊý¾Ý´æ´¢µ½*rxBufferÖ¸ÏòµÄÊý×éÖÐ
+ 604          //*****************************************************************************************
+ 605          //INT8U CC1101_Worwakeup(void) 
+ 606          //{
+C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 11  
+
+ 607          //    INT8U wor_data[2],status[2];
+ 608          //    INT8U packetLength;
+ 609          //
+ 610          //    // ¼ì²âµ½Êý¾Ý°üºó£¬½øÈë½ÓÊÕÄ£Ê½
+ 611          //    halSpiStrobe(CCxxx0_SRX);
+ 612          //    // CCxxx0_RXBYTES RX_FIFOµÄ×Ö½ÚÊý
+ 613          //    if ( (halSpiReadStatus(CCxxx0_RXBYTES) & BYTES_IN_RXFIFO) )             //Èç¹û½ÓµÄ×Ö½ÚÊý²»Îª0
+ 614          //    {
+ 615          //          packetLength = halSpiReadReg(CCxxx0_RXFIFO);                    //¶Á³öµÚÒ»¸ö×Ö½Ú£¬´Ë×Ö½ÚÎª¸ÃÖ¡Êý¾Ý³¤¶È
+ 616          //          //Usart_printf(&packetLength,1);
+ 617          //        
+ 618          //          if (packetLength == 2)                                    //Èç¹ûËùÒªµÄÓÐÐ§Êý¾Ý³¤¶ÈµÈÓÚ½ÓÊÕµ½µÄÊý¾Ý°üµÄ³¤¶È
+ 619          //          {
+ 620          //              halSpiReadBurstReg(CCxxx0_RXFIFO, wor_data, packetLength);  //¶Á³öËùÓÐ½ÓÊÕµ½µÄÊý¾Ý
+ 621          //              //*length = packetLength;                                   //°Ñ½ÓÊÕÊý¾Ý³¤¶ÈµÄÐÞ¸ÄÎªµ±Ç°Êý¾ÝµÄ³¤¶È
+ 622          //              if ( (wor_data[0]==BROADCAST && wor_data[1]==BROADCAST) || ( (wor_data[0]==g_module_id) && (wor_d
+             -ata[1]==g_module_id>>8) ) )
+ 623          //              //if ( (wor_data[0]==0x55 && wor_data[1]==0xAA) || (wor_data[0]==g_module_id && wor_data[1]==g_mo
+             -dule_id>>8) )
+ 624          //              {
+ 625          //                //Log_printf("Enter wor\n");
+ 626          //                // Read the 2 appended status bytes (status[0] = RSSI, status[1] = LQI)
+ 627          //                halSpiReadBurstReg(CCxxx0_RXFIFO, status, 2);             //¶Á³öCRCÐ£ÑéÎ»
+ 628          //                halSpiStrobe(CCxxx0_SFRX);                                //ÇåÏ´½ÓÊÕ»º³åÇø
+ 629          //                if(status[1] & CRC_OK)
+ 630          //                {
+ 631          //                  
+ 632          //                  halSpiStrobe(CCxxx0_SFRX); 
+ 633          //                  g_rf_rx_flag = 0x55;                                  // ±êÖ¾ÖÃÎ»ºó£¬½øÈëÈ«ËÙ½ÓÊÕÄ£Ê½
+ 634          //                  //g_rx_timeout = 0x00;
+ 635          //                  Timer0_Init(1);
+ 636          //                  TIMER0_ON;                                            // ¿ªÆô¶¨Ê±Æ÷0 ¶¨Ê±1s
+ 637          //                  //Log_printf("Init Timer0\n");
+ 638          //                  return packetLength;
+ 639          //                }
+ 640          //                else
+ 641          //                {
+ 642          //                  
+ 643          //                  Log_printf("CRC error\n");
+ 644          //                }             
+ 645          //              }
+ 646          //              else
+ 647          //              {
+ 648          //                Usart_printf(wor_data,2);
+ 649          //                Log_printf("  why Not me\n"); 
+ 650          //              }
+ 651          //          }
+ 652          //          else 
+ 653          //          {
+ 654          //              Log_printf("Length!=2\n");
+ 655          //          }
+ 656          //    } 
+ 657          //    else
+ 658          //    {
+ 659          //      //Log_printf("Not packet\n");
+ 660          //    }
+ 661          //    
+ 662          //    halSpiStrobe(CCxxx0_SFRX); 
+ 663          //    halSpiStrobe(CCxxx0_SWORRST);                                       //¸´Î»µ½ ÊÂ¼þ1
+ 664          //    halSpiStrobe(CCxxx0_SWOR);                                          //Æô¶¯WOR 
+ 665          //    INT1_ON;                        //2013Äê8ÔÂ15ÈÕ16:22:59
+ 666          //    return 0;
+C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 12  
+
+ 667          //}
+ 668          
+ 669          INT8U CC1101_Worwakeup(void) 
+ 670          {
+ 671   1          INT8U wor_data[2],status[2];
+ 672   1          INT8U packetLength;
+ 673   1      
+ 674   1          // ¼ì²âµ½Êý¾Ý°üºó£¬½øÈë½ÓÊÕÄ£Ê½
+ 675   1          halSpiStrobe(CCxxx0_SRX);
+ 676   1          // CCxxx0_RXBYTES RX_FIFOµÄ×Ö½ÚÊý
+ 677   1          if ( (halSpiReadStatus(CCxxx0_RXBYTES) & BYTES_IN_RXFIFO) )             //Èç¹û½ÓµÄ×Ö½ÚÊý²»Îª0
+ 678   1          {
+ 679   2                packetLength = halSpiReadReg(CCxxx0_RXFIFO);                    //¶Á³öµÚÒ»¸ö×Ö½Ú£¬´Ë×Ö½ÚÎª¸ÃÖ¡Êý¾Ý³¤¶È
+ 680   2                //Usart_printf(&packetLength,1);
+ 681   2              
+ 682   2                if (packetLength == 2)                                    //Èç¹ûËùÒªµÄÓÐÐ§Êý¾Ý³¤¶ÈµÈÓÚ½ÓÊÕµ½µÄÊý¾Ý°üµÄ³¤¶È
+ 683   2                {
+ 684   3                    halSpiReadBurstReg(CCxxx0_RXFIFO, wor_data, packetLength);  //¶Á³öËùÓÐ½ÓÊÕµ½µÄÊý¾Ý
+ 685   3                    //*length = packetLength;                                   //°Ñ½ÓÊÕÊý¾Ý³¤¶ÈµÄÐÞ¸ÄÎªµ±Ç°Êý¾ÝµÄ³¤¶È
+ 686   3                    if ( (wor_data[0]==BROADCAST && wor_data[1]==BROADCAST) || ( (wor_data[0] == (g_module_id.Sn[0]&MCU
+             -_ID)) && (wor_data[1]==g_module_id.Sn[1]) ) )
+ 687   3                    //if ( (wor_data[0]==0x55 && wor_data[1]==0xAA) || (wor_data[0]==g_module_id && wor_data[1]==g_modu
+             -le_id>>8) )
+ 688   3                    {
+ 689   4                      //Log_printf("Enter wor\n");
+ 690   4                      // Read the 2 appended status bytes (status[0] = RSSI, status[1] = LQI)
+ 691   4                      halSpiReadBurstReg(CCxxx0_RXFIFO, status, 2);             //¶Á³öCRCÐ£ÑéÎ»
+ 692   4                      halSpiStrobe(CCxxx0_SFRX);                                //ÇåÏ´½ÓÊÕ»º³åÇø
+ 693   4                      if(status[1] & CRC_OK)
+ 694   4                      {
+ 695   5                        
+ 696   5                        halSpiStrobe(CCxxx0_SFRX); 
+ 697   5                        //g_wor_flag = 0x55;                                    // Wor»½ÐÑÖÃÎ»£¬Ö®ºó½øÈëÈ«ËÙ½ÓÊÕÄ£Ê½
+ 698   5                        g_enter_rx = 0x55;
+ 699   5                        
+ 700   5                        timer = 0;
+ 701   5                        Timer0_Init(1);
+ 702   5                        TIMER0_ON;                                            // ¿ªÆô¶¨Ê±Æ÷0 ¶¨Ê±1s
+ 703   5                        
+ 704   5                        return packetLength;
+ 705   5                      }
+ 706   4                      else
+ 707   4                      {
+ 708   5                        Log_printf("wakeup CRC error\n");
+ 709   5                      }             
+ 710   4                    }
+ 711   3                    else
+ 712   3                    {
+ 713   4                      Usart_printf(wor_data,2);
+ 714   4                      Log_printf(" wakeup Not me\n"); 
+ 715   4                    }
+ 716   3                }
+ 717   2                else 
+ 718   2                {
+ 719   3                    Log_printf("Length!=2\n");
+ 720   3                    Usart_printf(&packetLength,1);
+ 721   3                }
+ 722   2          } 
+ 723   1          else
+ 724   1          {
+ 725   2            Log_printf("Not packet\n");
+ 726   2          }
+C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 13  
+
+ 727   1          
+ 728   1          halSpiStrobe(CCxxx0_SFRX); 
+ 729   1          halSpiStrobe(CCxxx0_SWORRST);                                       //¸´Î»µ½ ÊÂ¼þ1
+ 730   1          halSpiStrobe(CCxxx0_SWOR);                                          //Æô¶¯WOR 
+ 731   1          INT1_ON;                        //2013Äê8ÔÂ15ÈÕ16:22:59
+ 732   1          return 0;
+ 733   1      }
+ 734          
+ 735          //*****************************************************************************************
+ 736          //º¯ÊýÃû£ºINT8U CC1101_Setwor(void)  
+ 737          //ÊäÈë£ºÎÞ
+ 738          //Êä³ö£ºÎÞ
+ 739          //¹¦ÄÜÃèÊö£ºÉèÖÃrf»½ÐÑÄ£Ê½²ÎÊý EVENT0=300ms  rx_timeout=37.5ms
+ 740          //***************************************************************************************** 
+ 741          INT8U CC1101_Setwor(void)
+ 742          {
+ 743   1        halSpiStrobe(CCxxx0_SIDLE); //¿ÕÏÐÄ£Ê½
+ 744   1        // MCSM2.RX_TIME = 001b
+ 745   1        //  Rx_timeout = £¨10400*3.6058£©us = 37.5ms
+ 746   1        // => Rx_timeout = (EVENT0*C(RX_TIME, WOR_RES))*26/x   x¾§ÕñÆµÂÊ
+ 747   1        halSpiWriteReg(CCxxx0_MCSM2, 0x00);       //Ö÷Òª¼ÆËãworÖÐRxµÄ½ÓÊÕÊ±ÏÞ£¬RxµÄduty cycle
+ 748   1        // Enable automatic FS calibration when going from IDLE to RX/TX/FSTXON (in between EVENT0 and EVENT1)
+ 749   1        //ÔÚTX,RXºó ×Ô¶¯Ð£×¼   XSOCÊ±ÏÞ (10) 149-155uS
+ 750   1        //MSCM1 Ä¬ÈÏÖµ RXOFF_MODE ºÍ TXOFF_MODE ½ÓÊÕµ½Êý¾Ý°üºó ×ª»»µ½IDLEÄ£Ê½
+ 751   1        halSpiWriteReg(CCxxx0_MCSM0, 0x18);                  //Ð£×¼ FS_AUTOCAL[1:0]  01    ´ÓIDLE×ªµ½TX OR RXÄ£Ê
+             -½Ê±
+ 752   1        
+ 753   1        //ÅäÖÃEVENT0Ê±¼äÎª300ms£¬TxÒ»Ö¡»½ÐÑ²¨12¸ö×Ö½Ú(960us)
+ 754   1        halSpiWriteReg(CCxxx0_WOREVT1, 0x28);             // High byte Event0 timeout
+ 755   1        halSpiWriteReg(CCxxx0_WOREVT0, 0xA0);             // Low byte Event0 timeout.
+ 756   1       
+ 757   1        // Æô¶¯ WOR RCosc Ð£×¼
+ 758   1        // ÒòÎª½øÈëÐÝÃßºóÖ»Ê¹ÓÃRCÆµÂÊÖÜÆÚ,RCÊÜ»·¾³ºÍÎÂ¶ÈÓ°Ïì½Ï´ó,ËùÒÔ±ØÐëÒ»¶ÎÊ±¼ä»òÕßWOR»½ÐÑºóÖØÐÂÐ£×¼Ò»´ÎÊ±ÖÓ.
+ 759   1        // ÔÚWORÃ»Æô¶¯Ö®Ç° RCÐëµÃÏÈÐÐÆô¶¯
+ 760   1        // tEvent1 Ê±¼äÉèÖÃÎª×î´ó,ÉèÖÃ T_event1 ~ 1.4 ms
+ 761   1        halSpiWriteReg(CCxxx0_WORCTRL, 0x78);                 //tEvent1 =0111 ½ÓÊÕµÄ×î´óÊ±ÏÞ 
+ 762   1        //--RC_CAL =1 ×Ô¶¯Ð£×¼
+ 763   1        //halWait(30);                                                //µÈ´ýÐ£×¼Íê³É
+ 764   1        //halSpiWriteReg(CCxxx0_WORCTRL, 0x70 | WOR_RES);           // tEvent1 =0111 ¼´ 48 (1.333-1.385 ms)
+ 765   1        // RC_CAL =0
+ 766   1       
+ 767   1        //halSpiWriteReg(CCxxx0_RCCTRL1, RCC1);
+ 768   1        //halSpiWriteReg(CCxxx0_RCCTRL0, RCC0);
+ 769   1       
+ 770   1        //°ÑSO¿Ú ÉèÖÃ³ÉÍ¨Öª¿Ú µ±ÖÃµÍ
+ 771   1        //halSpiWriteReg(CCxxx0_IOCFG0, 0x06);  //0x24);
+ 772   1        //halSpiWriteReg(CCxxx0_IOCFG2, 0x06);  //0x24);
+ 773   1        
+ 774   1        halSpiStrobe(CCxxx0_SFRX); 
+ 775   1       
+ 776   1        halSpiStrobe(CCxxx0_SWORRST);      //¸´Î»µ½ ÊÂ¼þ1
+ 777   1        halSpiStrobe(CCxxx0_SWOR);         //Æô¶¯WOR  
+ 778   1        return 1;
+ 779   1      }
+ 780          
+ 781          //*****************************************************************************************
+ 782          //º¯ÊýÃû£ºvoid Rf_wakeup() interrupt  2 
+ 783          //ÊäÈë£ºÎÞ
+ 784          //Êä³ö£ºÎÞ
+ 785          //¹¦ÄÜÃèÊö£º»½ÐÑºó£¬¹Ø±ÕPD£¬ÖÃÎ»wor_flag
+ 786          //***************************************************************************************** 
+ 787          void Rf_wakeup() interrupt  2
+C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 14  
+
+ 788          {
+ 789   1         INT1_OFF;
+ 790   1         PCON &= PD_OFF; 
+ 791   1         LED_D1 = ~LED_D1; 
+ 792   1         
+ 793   1         //CC1101_Worwakeup();
+ 794   1         g_wor_flag = 0x55;
+ 795   1         
+ 796   1         //Log_printf("Enter INT1\n");
+ 797   1         //INT1_ON;                       //2013Äê8ÔÂ15ÈÕ16:22:59
+ 798   1      }
+ 799          
+ 800          //*****************************************************************************************
+ 801          //º¯ÊýÃû£ºINT8U CC1101_InitWOR(INT32U Time) 
+ 802          //ÊäÈë£ºÎÞ
+ 803          //Êä³ö£ºÎÞ
+ 804          //¹¦ÄÜÃèÊö£º»½ÐÑºó£¬¹Ø±ÕPD£¬ÖÃÎ»wor_flag
+ 805          //***************************************************************************************** 
+ 806          //INT8U CC1101_InitWOR(INT32U Time)
+ 807          //{
+ 808          //  //INT16U T_Event0=60;   //°Ñ EVENT0µÄÊ±¼äÉè¶¨Îª1S
+ 809          //  INT32U EVENT0=0;
+ 810          //  INT16U WOR_RES=1;
+ 811          //  INT16U WOR_rest=1;      //2^(5*WOR_RES) µÄÖµ
+ 812          // 
+ 813          //  //WORmode =1; //¿ªÆôWORMODÄ£Ê½
+ 814          // 
+ 815          //  //µ±ÊäÈëÊý¾Ý ²»·ûºÏ¹æÔòµÄÊ±ºò·µ»Ø´íÎó
+ 816          //  if(Time<15 | Time>61946643) return 0;
+ 817          // 
+ 818          //  /* WOR WOR_RESÉè¶¨
+ 819          //  ÒÔWOR_RESËùÄÜÇø·ÖµÄ×î´óÊ±ÏÞ Çø·ÖWOR_RES´óÐ¡
+ 820          // 
+ 821          //  WOR_RESÖµ       Ê±¼ä(¼«ÏÞ×î´óÖµ)(ms)
+ 822          //  0                1890.4615         *14.34 (×îÐ¡Öµ)
+ 823          //  1                60494.7692
+ 824          //  2                1935832.6153
+ 825          //  3                61946643.6923
+ 826          //  */
+ 827          //  if(Time<1890) WOR_RES=0;
+ 828          //  else if(Time<60494)       WOR_RES=1;
+ 829          //  else if(Time<1935832)     WOR_RES=2;
+ 830          //  else if(Time<61946643)    WOR_RES=3;
+ 831          // 
+ 832          //  // WOR_rest Ä¬ÈÏµÈÓÚ1
+ 833          //  // WOR_rest=2^5WOR_RES
+ 834          //  /*
+ 835          //  if(!WOR_RES) WOR_rest=1;
+ 836          //  else{
+ 837          //  for(INT8U t=0;t<(5*WOR_RES);t++)WOR_rest *= 2;
+ 838          //}
+ 839          //  */
+ 840          //  //2µÄ¶àÉÙ´Î·½£¬ÓÒÒÆ¶àÉÙÎ»
+ 841          //  WOR_rest <<= 5*WOR_RES;
+ 842          // 
+ 843          //  // ÉèÖÃ Event0 timeout  (RX ÂÖÑ¯¼ä¸ôÊ±¼ä);
+ 844          //  // ÊÂ¼þ0 EVENT0Ê±¼ä³¤¶È¹«Ê½ T_event0 = 750 / f_xosc * EVENT0 * 2^(5*WOR_RES) = 1 s,   f_xosc Ê¹ÓÃµÄÊÇ 
+             -26 MHz
+ 845          //  // EVENT0 = (F_xosc*Time)/((750*WOR_rest)*Tms);
+ 846          // 
+ 847          //  //ÓÉÓÚ¼ÆËãµÄÖµÆÕ±éÆ«´ó,Èç¹ûÕÕ³£¼ÆËã»á³öÏÖÒç³ö, ËùÒÔ·Ö¶Î´¦Àí
+ 848          //  EVENT0 = F_xosc/1000;
+C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 15  
+
+ 849          //  if(EVENT0>Time)
+ 850          //  {
+ 851          //    EVENT0 = EVENT0*Time;
+ 852          //    EVENT0 = EVENT0/(750*WOR_rest); 
+ 853          //  }
+ 854          //  else
+ 855          //  {
+ 856          //    EVENT0 = (Time/(750*WOR_rest))*EVENT0;
+ 857          //  }
+ 858          // 
+ 859          //  halSpiStrobe(CCxxx0_SIDLE); //¿ÕÏÐÄ£Ê½
+ 860          //  // ÉèÖÃ½ÓÊÕ³¬Ê± Rx_timeout =2.596 ms.
+ 861          //  // MCSM2.RX_TIME = 001b
+ 862          //  // => Rx_timeout = EVENT0*C(RX_TIME, WOR_RES)
+ 863          //  halSpiWriteReg(CCxxx0_MCSM2, 0x10);  //RX_TIME 0   Õ¼¿Õ±È×î´ó
+ 864          //  // Enable automatic FS calibration when going from IDLE to RX/TX/FSTXON (in between EVENT0 and EVENT1)
+ 865          //  //ÔÚTX,RXºó ×Ô¶¯Ð£×¼   XSOCÊ±ÏÞ (10) 149-155uS
+ 866          //  halSpiWriteReg(CCxxx0_MCSM0, 0x18);                  //Ð£×¼ FS_AUTOCAL[1:0]  01    ÖØIDLE×ªµ½TX OR RXÄ
+             -£Ê½Ê±
+ 867          //  //
+ 868          //  //Ð´Èë ÊÂ¼þ0 Ê±¼ä
+ 869          //  halSpiWriteReg(CCxxx0_WOREVT1, (INT8U)(EVENT0>>8));        // High byte Event0 timeout
+ 870          //  halSpiWriteReg(CCxxx0_WOREVT0, (INT8U)EVENT0);             // Low byte Event0 timeout.
+ 871          // 
+ 872          //  // Æô¶¯ WOR RCosc Ð£×¼
+ 873          //  // ÒòÎª½øÈëÐÝÃßºóÖ»Ê¹ÓÃRCÆµÂÊÖÜÆÚ,RCÊÜ»·¾³ºÍÎÂ¶ÈÓ°Ïì½Ï´ó,ËùÒÔ±ØÐëÒ»¶ÎÊ±¼ä»òÕßWOR»½ÐÑºóÖØÐÂÐ£×¼Ò»´ÎÊ±ÖÓ
+             -.
+ 874          //  // ÔÚWORÃ»Æô¶¯Ö®Ç° RCÐëµÃÏÈÐÐÆô¶¯
+ 875          //  // tEvent1 Ê±¼äÉèÖÃÎª×î´ó,ÉèÖÃ T_event1 ~ 1.4 ms
+ 876          //  halSpiWriteReg(CCxxx0_WORCTRL, 0x78| WOR_RES);             //tEvent1 =0111
+ 877          //  //--RC_CAL =1 ×Ô¶¯Ð£×¼
+ 878          //  //halWait(30);                                                //µÈ´ýÐ£×¼Íê³É
+ 879          //  //halSpiWriteReg(CCxxx0_WORCTRL, 0x70 | WOR_RES);           // tEvent1 =0111 ¼´ 48 (1.333-1.385 ms)
+ 880          //  // RC_CAL =0
+ 881          // 
+ 882          //  //halSpiWriteReg(CCxxx0_RCCTRL1, RCC1);
+ 883          //  //halSpiWriteReg(CCxxx0_RCCTRL0, RCC0);
+ 884          // 
+ 885          //  //°ÑSO¿Ú ÉèÖÃ³ÉÍ¨Öª¿Ú µ±ÓÐÊý¾Ý¹ýÀ´Ê± ÖÃµÍ
+ 886          //  halSpiWriteReg(CCxxx0_IOCFG0, 0x06);  //0x24);
+ 887          //  //halSpiWriteReg(CCxxx0_IOCFG2, 0x06);  //0x24);
+ 888          //  
+ 889          //  halSpiStrobe(CCxxx0_SFRX); 
+ 890          // 
+ 891          //  halSpiStrobe(CCxxx0_SWORRST);      //¸´Î»µ½ ÊÂ¼þ1
+ 892          //  halSpiStrobe(CCxxx0_SWOR);         //Æô¶¯WOR
+ 893          // 
+ 894          //  //  halSpiStrobe(CCxxx0_SPWD); //½øÈë¶ÏµçÄ£Ê½
+ 895          //  return 1;
+ 896          //}
+ 897          
+ 898          //*****************************************************************************************
+ 899          //º¯ÊýÃû£ºvoid CC1100_wake up_carry(INT8U ms) 
+ 900          //ÊäÈë£ºINT8U ms Éè¶¨»½ÐÑ²¨Ê±³£
+ 901          //Êä³ö£ºÎÞ
+ 902          //¹¦ÄÜÃèÊö£º·¢ËÍ»½ÐÑ²¨
+ 903          //***************************************************************************************** 
+ 904          // 300ms 313¸ö
+ 905          // 1s    x=1044  
+ 906          // 
+ 907          void CC1101_Wakeupcarry(INT8U *worcarry, INT8U size,INT8U s)
+ 908          {
+C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 16  
+
+ 909   1          INT16U  s_count;
+ 910   1          //s_count = s*1044/5;
+ 911   1          s_count = s*48;
+ 912   1      
+ 913   1          while(s_count--)
+ 914   1          {
+ 915   2            halRfSendPacket(worcarry, size);
+ 916   2            //i = halSpiReadStatus(CCxxx0_TXBYTES);
+ 917   2            //Usart_printf(&s_count,1);
+ 918   2          }
+ 919   1      
+ 920   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1768    ----
+   CONSTANT SIZE    =    143    ----
+   XDATA SIZE       =   ----      50
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

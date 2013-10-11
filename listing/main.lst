@@ -1,0 +1,350 @@
+C51 COMPILER V9.00   MAIN                                                                  10/09/2013 15:45:53 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\output\main.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE main.c LARGE BROWSE DEBUG OBJECTEXTEND PRINT(.\listing\main.lst) TABS(2) OB
+                    -JECT(.\output\main.obj)
+
+line level    source
+
+   1          // Project£ºcapinfo-rf_route
+   2          // Filename:  mcu_config.c
+   3          // Function:  rfµ×²ãÇý¶¯
+   4          // Author:    wzd
+   5          // Date:      2013Äê8ÔÂ15ÈÕ10:21:25
+   6          
+   7          
+   8          #include "rf_route.h"
+   9          
+  10          INT8U g_1s_counter=0,g_leng=0,g_count = 0,g_test_count=0;
+  11          
+  12          // ÓÐÓÃµÄÈ«¾Ö
+  13          Module_Sn g_module_id,g_gateway;
+  14          INT16U  timer = 0;
+  15          INT8U g_wor_flag = 0x00,g_rx_flag = 0,g_rf_rx_flag = 0,g_rx_timeout = 0x00,g_enter_rx = 0x00;
+  16          
+  17          INT8U g_search = 0x00,g_getroute=0x00;              // ½øÐÐ3´ÎËÑË÷Â·ÓÉ
+  18          INT8U g_rid = 0x01,g_pre_rid = 0x00;
+  19          INT8U WorCarry[2] = {0xFF,0xFF};
+  20          INT8U TxBuf[64];        // 11×Ö½Ú, Èç¹ûÐèÒª¸ü³¤µÄÊý¾Ý°ü,ÇëÕýÈ·ÉèÖÃ
+  21          //INT8U RxBuf[64];
+  22          INT8U RfSentBuf[64];
+  23          INT8U RfRecBuf[64];
+  24          INT8U SensorData[20]={0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};   // ´«¸ÐÆ÷Êý¾Ý
+  25          Rf_Route rf_route_data;
+  26          INT16U g_pre_src;
+  27          INT8U g_module_rpl = 0x01;
+  28          INT8U g_route_size = 0x01;
+  29          //INT8U Test[20] = "Send Packet";
+  30          // Â·ÓÉÉêÇëÃüÁî
+  31          // Orien
+  32          // AA 0B 01 81 10 01   51 01 01    00 01  10 01   FD
+  33          INT8U SearchData[14] = {0xAA,0x0B,0x01,0x81,0x10,0x01,0x51,0x01,0x01,0x00,0x01,0x10,0x01,0x00};
+  34          //***************¸ü¶à¹¦ÂÊ²ÎÊýÉèÖÃ¿ÉÏêÏ¸²Î¿¼DATACC1100Ó¢ÎÄÎÄµµÖÐµÚ48-49Ò³µÄ²ÎÊý±í******************
+  35          //INT8U PaTabel[8] = {0x04 ,0x04 ,0x04 ,0x04 ,0x04 ,0x04 ,0x04 ,0x04};  //-30dBm   ¹¦ÂÊ×îÐ¡
+  36          //INT8U PaTabel[8] = {0x60 ,0x60 ,0x60 ,0x60 ,0x60 ,0x60 ,0x60 ,0x60};  //0dBm
+  37          INT8U PaTabel[8] = {0xC0 ,0xC0 ,0xC0 ,0xC0 ,0xC0 ,0xC0 ,0xC0 ,0xC0};
+  38          
+  39          
+  40          const RF_SETTINGS rfSettings = 
+  41          {
+  42                  0x00,   
+  43                  0x08,   // FSCTRL1   Frequency synthesizer control.   IF£¨ÖÐÆµ intermediate frequence£© ¾§ÕñÆµÂÊ*v
+             -al/2^10  = 203.125khz
+  44                  0x00,   // FSCTRL0   Frequency synthesizer control.   Fxtal/2^14 = 1.59k 
+  45                  
+  46                  0x10,   // FREQ2     Frequency control word, high byte. Fcarrier = ¾§ÕñÆµÂÊ*val/2^16 = 433Mhz  ¶¨Ò
+             -åÁËÖÐÐÄÆµÂÊ
+  47                  0xA7,   // FREQ1     Frequency control word, middle byte.  
+  48                  0x62,   // FREQ0     Frequency control word, low byte.
+  49          
+  50                  // ¿ÕÖÐ²¨ÌØÂÊ 100kbaud£¬ÔØ²¨ÆµÂÊ433MHZ ·ÇManchester±àÂë 4ByteÍ¬²½×Ö(30/32Í¬²½×ÖÖÊÁ¿Ä£Ê½)£¬2-FSK
+  51                  // MDMCFG4Ö¸¶¨ÁËÐÅµÀ´ø¿í
+  52                  // MDMCFG3Ö¸¶¨ÁË¿ÕÖÐ²¨ÌØÂÊ
+C51 COMPILER V9.00   MAIN                                                                  10/09/2013 15:45:53 PAGE 2   
+
+  53                  // MDMCFG2Ö¸¶¨ÂË²¨Æ÷£¬ÎÞÏßÐÅºÅµ÷ÖÆ¸ñÊ½£¬4ByteÇ°µ¼Âë£¬4ByteÍ¬²½×Ö(30/32Í¬²½×ÖÖÊÁ¿Ä£Ê½)
+  54                  // ÅäÖÃÃ¿¸öÐÅµÀµÄ´ø¿í
+  55                  0x5B,   // MDMCFG4   Modem configuration.   CHANBW_E = 01 CHANBW_M =01 DRATE_E = 11 BW_channel = Fx
+             -osc/£¨8*£¨4+CHANBW_M£©*2^CHANBW_E£©= 325khz 
+  56                  0xF8,   // MDMCFG3   Modem configuration.   DRATE_M = 248 Rdata = 100kBaud  ¿ÕÖÐ²¨ÌØÂÊ
+  57                  0x03,   // MDMCFG2   Modem configuration.   DEM_DCFILT_OFF=0 MOD_FORMAT=000 MANCHESTER_EN=0£¨²»Ê¹ÄÜ
+             -£©SYNC_MODE = 011(30/32sync word bits detected)
+  58                  0x22,   // MDMCFG1   Modem configuration.   FEC_EN=0(disable) NUM_PREAMBLE=010(4byteÇ°µ¼Âë) NU=00 C
+             -HANSPC_E=10  
+  59                  0xF8,   // MDMCFG0   Modem configuration.   ²»±Ø¹ØÐÄ
+  60                  
+  61                  // 0ÐÅµÀ
+  62                  0x03,   // CHANNR    Channel number.        
+  63                  0x47,   // DEVIATN   Modem deviation setting (when FSK modulation is enabled).
+  64                  
+  65                  // ÉÙÁËÁ½¸öÅäÖÃ£¬Ö÷ÒªÕë¶ÔÓÚworÄ£Ê½µÄ²Ù×÷
+  66                  // MCSM2 WORÄ£Ê½ÐèÒª¼Ä´æÆ÷ Ðè½øÐÐÅäÖÃ  RX_TIME[2:0]
+  67                  // MCSM1 RXOFF_MODE ½ÓÊÕÊý¾Ý°üºó£¬RFµÄ×´Ì¬
+  68                  
+  69                  0xB6,   // FREND1    Front end RX configuration.
+  70                  0x10,   // FREND0    Front end RX configuration.
+  71                  
+  72                  // MCSM2
+  73                  // MCSM1     RXOFF_MODE  TXOFF_MODE Í¬Ê±ÅäÖÃÎª½ÓÊÕÍê³É»ò·¢ËÍÍê³Éºó ÇÐ»»µ½IDLEÄ£Ê½
+  74                  0x18,   // MCSM0     Main Radio Control State Machine configuration.   
+  75                  
+  76                  0x1D,   // FOCCFG    Frequency Offset Compensation Configuration.
+  77                  0x1C,   // BSCFG     Bit synchronization Configuration.
+  78                  0xC7,   // AGCCTRL2  AGC control.
+  79                  0x00,   // AGCCTRL1  AGC control.
+  80                  0xB2,   // AGCCTRL0  AGC control.
+  81                  
+  82                  0xEA,   // FSCAL3    Frequency synthesizer calibration.
+  83                  0x2A,   // FSCAL2    Frequency synthesizer calibration.
+  84                  0x00,   // FSCAL1    Frequency synthesizer calibration.
+  85                  0x11,   // FSCAL0    Frequency synthesizer calibration.
+  86                  
+  87                  0x59,   // FSTEST    Frequency synthesizer calibration.
+  88                  0x81,   // TEST2     Various test settings.
+  89                  0x35,   // TEST1     Various test settings.
+  90                  0x09,   // TEST0     Various test settings.
+  91                  0x0B,   // IOCFG2    GDO2 output pin configuration.
+  92                  0x06,   // IOCFG0    GDO0 output pin configuration. Refer to SmartRF?Studio User Manual for detail
+             -ed pseudo register explanation.
+  93                  // Í¨¹ý²éÑ¯GDO0À´È·ÈÏÊÇ·ñ½ÓÊÕµ½Êý¾Ý ½ÓÊÕµ½Êý¾Ý°üÖÃÎ» Êý¾Ý°üÄ©Î²½áÊøÖÃÎ»
+  94                  
+  95                  0x04,   // PKTCTRL1  Packet automation control.   APPEND_STATUS=1Ôö¼ÓÁ½¸ö×´Ì¬×Ö½ÚÒÔ¼°CRC_OK±ê¼ÇÔö¼Ó
+             -ÔÚÊý¾Ý°üÓÐÐ§¸ºÔØÉÏ ADR_CHK=00ÎÞµØÖ·Ð£Ñé
+  96                  0x05,   // PKTCTRL0  Packet automation control.   NU=0 WHITE_DATA=1¹Ø±ÕÊý¾Ý°×»¯ PKT_FORMAT=00(use F
+             -IFOs for RX and TX) NU=0 CRC_EN=1 LENGTH_CONFIG=01¿É±ä³¤¶È°üÄ£Ê½
+  97                  0x00,   // ADDR      Device address.
+  98                  0xFF    // PKTLEN    Packet length.               ¿É±äÊý¾Ý°üÄ£Ê½ÏÂ£¬¿É·¢ËÍµÄ×î´ó×î´ó×Ö½Ú ¶¨ÒåÎª×î´ó
+  99          };
+ 100          
+ 101          void main()
+ 102          {
+ 103   1          INT8U i=0;
+ 104   1          INT8U search_temp = 0x06;              // search_temp ¿ÉÒÔÔö¼Óµ½6 ÔÚsearch_tempÐ¡ÓÚ3µÄÊ±ºò ¿ªÊ¼·¢ËÍ¹ã²¥»½ÐÑ
+ 105   1          
+ 106   1          CpuInit();
+ 107   1          POWER_UP_RESET_CC1100();
+ 108   1          halRfWriteRfSettings();
+C51 COMPILER V9.00   MAIN                                                                  10/09/2013 15:45:53 PAGE 3   
+
+ 109   1          halSpiWriteBurstReg(CCxxx0_PATABLE, PaTabel, 8);
+ 110   1          CC1101_Setwor();
+ 111   1          G_IT_ON;                              // ¿ªÆôµ¥Æ¬»úÈ«¾ÖÖÐ¶Ï
+ 112   1      
+ 113   1          Usart_printf(&g_module_id.Sn[0],1);
+ 114   1          Usart_printf(&g_module_id.Sn[1],1);
+ 115   1          Usart_printf(&g_gateway.Sn[0],1);
+ 116   1          Usart_printf(&g_gateway.Sn[1],1);
+ 117   1          Log_printf("   ");
+ 118   1      
+ 119   1          
+ 120   1          // ÉÏµçÉèÖÃÍø¹Ø
+ 121   1          // Ö»ÓÐÍâ²¿ÖÐ¶ÏÃ»ÓÐ´ò¿ª£¬ÏÖÔÚ½øÐÐÉèÖÃÍø¹Ø×Ö½Ú µØÖ·ºÍÍø¹Ü²»ÄÜÎªÈ«0xFFFF
+ 122   1          while( ( 0xFFFF == g_gateway.Sn_temp ) || ( 0xFFFF == g_module_id.Sn_temp ) )
+ 123   1          {
+ 124   2            LED_D4 = ~LED_D4;
+ 125   2            delay(50000);
+ 126   2            if( 0x55 == g_rx_flag )
+ 127   2            {
+ 128   3              g_rx_flag = 0x00;
+ 129   3      
+ 130   3              // ½«Íø¹ØÊý¾ÝÐ´Èë
+ 131   3              IapProgramByte(GATEWAY_ADDRESS,TxBuf[1]);
+ 132   3              IapProgramByte(GATEWAY_ADDRESS+1,TxBuf[2]);
+ 133   3              //g_gateway.Sn_temp = IapReadByte(GATEWAY_ADDRESS);
+ 134   3      
+ 135   3              // ½«µØÖ·Êý¾ÝÐ´Èë
+ 136   3              IapProgramByte(MODEL_SN_ADDRESS,TxBuf[3]);
+ 137   3              IapProgramByte(MODEL_SN_ADDRESS+1,TxBuf[4]);
+ 138   3              //g_module_id.Sn_temp = IapReadByte(MODEL_SN_ADDRESS);
+ 139   3              Log_printf("GATEWAY OK\n");
+ 140   3              Log_printf("MODEL_SN OK\n");
+ 141   3              LED_D4 = 0;
+ 142   3              // ¶ÁÈ¡ÉèÖÃÊý¾Ý
+ 143   3              IapReadModelSn(MODEL_SN_ADDRESS,&g_module_id);
+ 144   3              IapReadModelSn(GATEWAY_ADDRESS,&g_gateway);
+ 145   3            }
+ 146   2          }
+ 147   1      
+ 148   1          // g_module_rpl = IapReadByte(MODEL_RPL);
+ 149   1          // Ä¬ÈÏÄ£¿éidµÄÂ·ÓÉµÈ¼¶1  Ä£¿éID ×î¸ßÎ»Îª0 ±íÊ¾Â·ÓÉÄ£¿é
+ 150   1          g_module_id.Sn[0] |= ( (g_module_rpl<<4) & 0x7F );
+ 151   1          g_pre_src = g_module_id.Sn_temp;
+ 152   1          Usart_printf(&g_module_id.Sn[0],1);
+ 153   1          Usart_printf(&g_module_id.Sn[1],1);
+ 154   1          Usart_printf(&g_gateway.Sn[0],1);
+ 155   1          Usart_printf(&g_gateway.Sn[1],1);
+ 156   1          Log_printf(" initialization ok ");
+ 157   1      
+ 158   1          // µØÖ·Íø¹ØÉèÖÃÍê³É
+ 159   1          LED_D2 = ~LED_D2;
+ 160   1          // ¶Á³öËÑË÷Ä£Ê½ Ê×´ÎÉÏµçÎª0xFF Ôò½øÐÐËÑË÷
+ 161   1          g_search = IapReadByte(SEARCH_MODE);
+ 162   1          if( 0xFF == g_search )
+ 163   1          {
+ 164   2      SearchMode:
+ 165   2            while( search_temp-- != 0 )
+ 166   2            {
+ 167   3              SearchData[2] = g_rid;
+ 168   3              // Íø¹ØµØÖ·
+ 169   3              SearchData[4] = g_gateway.Sn[0];
+ 170   3              SearchData[5] = g_gateway.Sn[1];
+C51 COMPILER V9.00   MAIN                                                                  10/09/2013 15:45:53 PAGE 4   
+
+ 171   3              // Ô´µØÖ·(Ä£¿éID)
+ 172   3              SearchData[9]  = g_module_id.Sn[0];
+ 173   3              SearchData[10] = g_module_id.Sn[1];
+ 174   3              // Ä¿µÄµØÖ·(Íø¹ØµØÖ·)
+ 175   3              SearchData[11] = g_gateway.Sn[0];
+ 176   3              SearchData[12] = g_gateway.Sn[1];       
+ 177   3              
+ 178   3              for( i=0;i<13;i++)
+ 179   3              {
+ 180   4                SearchData[13] += SearchData[i];
+ 181   4              }       
+ 182   3              // ½øÐÐ»½ÐÑÊ±£¬Ö»ÐèÒª°ÑÂ·ÓÉ±êÊ¶ÂË³ý¼´¿É ½«Â·ÓÉ±êÊ¶¸ß×Ö½Ú·Ö³öÒ»Î»´ú±íÊÇÄ£¿é»¹ÊÇ»ùÕ¾
+ 183   3              // Ê×ÏÈ·¢ËÍ»½ÐÑ²¨£¬¶øºó·¢ËÍÊý¾Ý ½øÐÐÂ·ÓÉËÑË÷Ê±£¬Ê¹ÓÃ¹ã²¥»½ÐÑ
+ 184   3              if( search_temp < 3 )
+ 185   3                CC1101_Wakeupcarry(WorCarry, 2,4);
+ 186   3              halRfSendPacket(SearchData, 14);
+ 187   3              g_rid++;                              // ·¢ËÍÍê³Éºóg_rid×ÔÔö
+ 188   3              //g_wor_flag = 0x55;
+ 189   3              timer = 0; 
+ 190   3              Timer0_Init(10);
+ 191   3              TIMER0_ON;  
+ 192   3              //g_search = 0x55;
+ 193   3              g_enter_rx = 0x55;
+ 194   3              // ´æ·ÅÐ£ÑéºÍ
+ 195   3              SearchData[13] = 0x00;
+ 196   3              goto EnterRx;
+ 197   3            } 
+ 198   2            g_search = 0x00;    
+ 199   2          }
+ 200   1      //    else 
+ 201   1      //    {
+ 202   1      //      g_search = 0x00;
+ 203   1      //    }
+ 204   1      
+ 205   1          
+ 206   1          while (1)
+ 207   1          {
+ 208   2            //Log_printf("Enter wor\n");
+ 209   2            if( 0x55 == g_wor_flag )
+ 210   2            {
+ 211   3              CC1101_Worwakeup();
+ 212   3              // ½«½ÓÊÕµÄÊý¾Ý´æ´¢µ½RxBufÊý×éÖÐ
+ 213   3      EnterRx:
+ 214   3              while(g_enter_rx)
+ 215   3                halRfRxPacket(RfRecBuf);
+ 216   3      
+ 217   3              // ´Ë´¦½øÐÐrfÊý¾Ý´¦Àí
+ 218   3              if( 0x55 == g_rf_rx_flag )
+ 219   3              {
+ 220   4                g_rf_rx_flag = 0x00;  
+ 221   4                RfRouteManage(&rf_route_data);
+ 222   4              }
+ 223   3              if( 0xFF == g_search )                  // ÈôÃ»ÓÐËÑË÷µ½Â·¾¶£¬ÔòÌø×ª»ØËÑË÷Â·¾¶
+ 224   3                goto SearchMode;
+ 225   3            }
+ 226   2            
+ 227   2            halSpiStrobe(CCxxx0_SWORRST);         // ¸´Î»µ½ ÊÂ¼þ1
+ 228   2            halSpiStrobe(CCxxx0_SWOR);            // Æô¶¯WOR  
+ 229   2            INT1_ON;                              // ¿ªÍâ²¿ÖÐ¶Ï
+ 230   2            PCON |= PD_ON;                        // ´ÓµôµçÄ£Ê½»½ÐÑºó£¬³ÌÐò´ÓÕâÐÐ¿ªÊÐ     
+ 231   2            //Log_printf("Exit pd\n");
+ 232   2          } 
+C51 COMPILER V9.00   MAIN                                                                  10/09/2013 15:45:53 PAGE 5   
+
+ 233   1      }
+ 234          
+ 235          
+ 236          //    while (1)
+ 237          //    {
+ 238          //      //Log_printf("first pd\n");
+ 239          //      INT1_ON;                        // ¿ªÍâ²¿ÖÐ¶Ï
+ 240          //      PCON |= PD_ON;                  // ´ÓµôµçÄ£Ê½»½ÐÑºó£¬³ÌÐò´ÓÕâÐÐ¿ªÊÐ
+ 241          //      if( 0x55 == g_wor_flag )
+ 242          //      {
+ 243          //          g_wor_flag = 0x00;
+ 244          //          CC1101_Worwakeup();
+ 245          //          while( 0x55 == g_rf_rx_flag  )//&& 0x00 == g_rx_timeout
+ 246          //          {
+ 247          //            CC1101_EnterRx(RxBuf);
+ 248          //          }
+ 249          //      }
+ 250          //      halSpiStrobe(CCxxx0_SWORRST);      //¸´Î»µ½ ÊÂ¼þ1
+ 251          //      halSpiStrobe(CCxxx0_SWOR);         //Æô¶¯WOR  
+ 252          //      //Log_printf("Exit pd\n");
+ 253          //    }     
+ 254          
+ 255          //void main() 
+ 256          // { 
+ 257          //          INT16U i; 
+ 258          //          INT8U eerom;
+ 259          //          UART_init();
+ 260          //          LED_D4 = ~LED_D4;
+ 261          //          delay(50000);
+ 262          //          //P1 = 0xfe;                                    //1111,1110 System Reset OK 
+ 263          //          //Delay(10);                                    //Delay 
+ 264          //          IapEraseSector(IAP_ADDRESS);                  //Erase current sector 
+ 265          //          for (i=0; i<512; i++)                         //Check whether all sector data is FF 
+ 266          //          { 
+ 267          //                   if (IapReadByte(IAP_ADDRESS+i) != 0xff) 
+ 268          //                   goto Error;                          //If error, break 
+ 269          //          } 
+ 270          //          //P1 = 0xfc;                                    //1111,1100 Erase successful 
+ 271          //          //Delay(10);                                    //Delay 
+ 272          // 
+ 273          //          LED_D3 = ~LED_D3;
+ 274          //          delay(50000);                                                                                 
+             -  
+ 275          //          for (i=0; i<512; i++)                         //Program 512 bytes data into data flash 
+ 276          //                                                                               
+ 277          //          {                                                                
+ 278          //                   IapProgramByte(IAP_ADDRESS+i, (INT8U)i);         
+ 279          //          }                                                    
+ 280          //                                                                
+ 281          //          //P1 = 0xf8;                                    //1111,1000 Program successful                
+             -                                                                                                                        
+             -                                      
+ 282          //          //Delay(10);                                    //Delay 
+ 283          //          LED_D2 = ~LED_D2;
+ 284          //          delay(50000);
+ 285          //                                                             
+ 286          //          for (i=0; i<512; i++)                        //Verify 512 bytes data 
+ 287          //          {                             
+ 288          //                   //eerom = IapReadByte(IAP_ADDRESS+i);
+ 289          //                                     
+ 290          //                   if ( (eerom = IapReadByte(IAP_ADDRESS+i)) != (INT8U)i)                               
+             - 
+C51 COMPILER V9.00   MAIN                                                                  10/09/2013 15:45:53 PAGE 6   
+
+ 291          //                   goto Error;                          //If error, break 
+ 292          //                   Usart_printf(&eerom,1);    
+ 293          //                              
+ 294          //          }           
+ 295          //          LED_D1 = ~LED_D1;
+ 296          //          delay(50000);
+ 297          //          //P1 = 0xf0;                                    //1111,0000 Verify successful 
+ 298          //          while (1); 
+ 299          //Error: 
+ 300          //          //P1 &= 0x7f;                                   //0xxx,xxxx IAP operation fail 
+ 301          //          Log_printf("Error EEPROM");
+ 302          //          while (1); 
+ 303          //
+ 304          // } 
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    594    ----
+   CONSTANT SIZE    =     49    ----
+   XDATA SIZE       =    314       2
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

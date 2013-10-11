@@ -1,0 +1,428 @@
+C51 COMPILER V9.00   MCU_CONFIG                                                            10/09/2013 15:45:53 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE MCU_CONFIG
+OBJECT MODULE PLACED IN .\output\mcu_config.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE mcu_config.c LARGE BROWSE DEBUG OBJECTEXTEND PRINT(.\listing\mcu_config.lst
+                    -) TABS(2) OBJECT(.\output\mcu_config.obj)
+
+line level    source
+
+   1            // Filename:  mcu_config.c
+   2          // Function:  rf底层驱动
+   3          // Author:    wzd
+   4          // Date:      2013年8月15日10:21:25
+   5          
+   6          
+   7          #include "mcu_config.h"
+   8          
+   9          
+  10          /*****************************************************************************************
+  11          //函数名：void IapIdle(void) 
+  12          //输入：无
+  13          //输出：无
+  14          //功能描述：禁止ISP/IAP/EEPROM 功能，是MCU处于安全状态
+  15          /*****************************************************************************************/
+  16          void IapIdle(void) 
+  17          { 
+  18   1        IAP_CONTR = 0;                        //Close IAP function 
+  19   1        IAP_CMD = 0;                          //Clear command to standby 
+  20   1        IAP_TRIG = 0;                         //Clear trigger register 
+  21   1        IAP_ADDRH = 0x80;                     //Data ptr point to non-EEPROM area 
+  22   1        IAP_ADDRL = 0;                        //Clear IAP address to prevent misuse 
+  23   1      } 
+  24          
+  25          /*****************************************************************************************
+  26          //函数名：INT8U IapReadByte(INT16U addr) 
+  27          //输入：EEPROM地址
+  28          //输出：EEPROM地址中的数据
+  29          //功能描述：从EEPROM中读取一个字节，
+  30          /*****************************************************************************************/               
+             -                                
+  31          INT8U IapReadByte(INT16U addr)                                                
+  32          {         
+  33   1        INT8U dat;                             //Data buffer                                                    
+             -  
+  34   1        IAP_CONTR = ENABLE_IAP;               //Open IAP function, and set wait time                            
+             -            
+  35   1        IAP_CMD = CMD_READ;                   //Set ISP/IAP/EEPROM READ command                                 
+             -  
+  36   1        IAP_ADDRL = addr;                  //Set ISP/IAP/EEPROM address low                                  
+  37   1        IAP_ADDRH = addr >> 8;                //Set ISP/IAP/EEPROM address high 
+  38   1        IAP_TRIG = 0x5a;                     //Send trigger command1 (0x5a)                  
+  39   1        IAP_TRIG = 0xa5;                      //Send trigger command2 (0xa5)               
+  40   1        _nop_();                              //MCU will hold here until ISP/IAP/EEPROM                         
+             -               
+  41   1                                               //operation complete 
+  42   1        dat = IAP_DATA;                       //Read ISP/IAP/EEPROM data 
+  43   1        IapIdle();                            //Close ISP/IAP/EEPROM function  
+  44   1        return dat;                           //Return Flash data 
+  45   1      } 
+  46          
+  47          /*****************************************************************************************
+  48          //函数名：void IapProgramByte(INT16U addr, INT8U dat)  
+  49          //输入：addr：EEPROM地址，dat：EEPROM地址中的数据
+C51 COMPILER V9.00   MCU_CONFIG                                                            10/09/2013 15:45:53 PAGE 2   
+
+  50          //输出：无
+  51          //功能描述：写入一个字节
+  52          /*****************************************************************************************/ 
+  53          void IapProgramByte(INT16U addr, INT8U dat) 
+  54          { 
+  55   1        IAP_CONTR = ENABLE_IAP;              //Open IAP function, and set wait time 
+  56   1        IAP_CMD = CMD_PROGRAM;               //Set ISP/IAP/EEPROM PROGRAM command 
+  57   1        IAP_ADDRL = addr;                    //Set ISP/IAP/EEPROM address low 
+  58   1        IAP_ADDRH = addr >> 8;               //Set ISP/IAP/EEPROM address high 
+  59   1        IAP_DATA = dat;                      //Write ISP/IAP/EEPROM data 
+  60   1        IAP_TRIG = 0x5a;                     //Send trigger command1 (0x5a) 
+  61   1        IAP_TRIG = 0xa5;                     //Send trigger command2 (0xa5) 
+  62   1        _nop_();                             //MCU will hold here until ISP/IAP/EEPROM 
+  63   1                                            //operation complete 
+  64   1        IapIdle(); 
+  65   1      } 
+  66          
+  67          /*****************************************************************************************
+  68          //函数名：void IapEraseSector(INT16U addr) 
+  69          //输入：addr：EEPROM地址
+  70          //输出：无
+  71          //功能描述：擦出一个扇区（512个字节为一个扇区）
+  72          /*****************************************************************************************/ 
+  73          void IapEraseSector(INT16U addr)                                 
+  74          {                                                                                                         
+             -                                                
+  75   1        IAP_CONTR = ENABLE_IAP;              //Open IAP function, and set wait time                             
+             -          
+  76   1        IAP_CMD = CMD_ERASE;                 //Set ISP/IAP/EEPROM ERASE command  扇区擦除                       
+             -          
+  77   1        IAP_ADDRL = addr;                    //Set ISP/IAP/EEPROM address low                            
+  78   1        IAP_ADDRH = addr >> 8;               //Set ISP/IAP/EEPROM address high                          
+  79   1        IAP_TRIG = 0x5a;                    //Send trigger command1 (0x5a) 
+  80   1        IAP_TRIG = 0xa5;                     //Send trigger command2 (0xa5)              
+  81   1        _nop_();                           //MCU will hold here until ISP/IAP/EEPROM                            
+             -        
+  82   1                                            //operation complete 
+  83   1        IapIdle(); 
+  84   1      }
+  85          
+  86          ///*****************************************************************************************
+  87          ////函数名：void IapEraseByte(INT16U addr,INT8U size)  
+  88          ////输入：addr：EEPROM地址  size：擦除字节个数
+  89          ////输出：1擦除成功 0擦除失败
+  90          ////功能描述：按字节擦除  将每个字节编程为0xFF，而后应该可以直接写入数据。待验证
+  91          ///*****************************************************************************************/  
+  92          //INT8U IapCheckEEPROM(INT16U addr,INT8U size)                                 
+  93          //{   
+  94          //  INT8U i;
+  95          //
+  96          //  for (i=0; i<size; i++)                         //Check whether all erase data is FF
+  97          //  {
+  98          //    if (IapReadByte(addr+i) != 0xff)
+  99          //      return 0;   
+ 100          //  }
+ 101          //  return 1;
+ 102          //} 
+ 103          
+ 104          /*****************************************************************************************
+ 105          //函数名：void IapReadModelSn(INT16U addr,Model_Sn* sndata) 
+ 106          //输入：addr：EEPROM地址 data: 读出的数据
+ 107          //输出：无
+C51 COMPILER V9.00   MCU_CONFIG                                                            10/09/2013 15:45:53 PAGE 3   
+
+ 108          //功能描述：读取EEPROM内的数据
+ 109          /*****************************************************************************************/ 
+ 110          void IapReadModelSn(INT16U addr,Module_Sn* sndata)
+ 111          {
+ 112   1        INT8U i;
+ 113   1        for(i=0;i<2;i++)
+ 114   1        {
+ 115   2          sndata->Sn[i] = IapReadByte(addr+i);
+ 116   2        }
+ 117   1      }
+ 118          
+ 119          /*****************************************************************************************
+ 120          //函数名：void IapRead2Array(INT16U addr,INT8U* arraydata,INT8U size) 
+ 121          //输入：addr：EEPROM地址 arraydata: 数据存放到数组中 size：数据个数
+ 122          //输出：无
+ 123          //功能描述：读取EEPROM内的数据并存放到数组中
+ 124          /*****************************************************************************************/ 
+ 125          void IapRead2Array(INT16U addr,INT8U* arraydata,INT8U size)
+ 126          {
+ 127   1        INT8U i;
+ 128   1        for(i=0;i<size;i++)
+ 129   1        {
+ 130   2          arraydata[i] = IapReadByte(addr+i);
+ 131   2        }
+ 132   1      }
+ 133          
+ 134          /*****************************************************************************************
+ 135          //函数名：void Int1Init(void)
+ 136          //输入：无
+ 137          //输出：无
+ 138          //功能描述：INT1中断初始化程序
+ 139          /*****************************************************************************************/
+ 140          void Int1Init(void)
+ 141          {
+ 142   1      //  IT0 = 1;  // 外部中断0下降沿中断
+ 143   1      //  EX0 = 1;  // 外部中断0允许
+ 144   1          IT1 = 1;  // 外部中断1下降沿中断
+ 145   1          //INT1_ON;  // 外部中断1允许
+ 146   1      }
+ 147          
+ 148          /*****************************************************************************************
+ 149          //函数名：void SpiInit(void)
+ 150          //输入：无
+ 151          //输出：无
+ 152          //功能描述：SPI初始化程序
+ 153          /*****************************************************************************************/
+ 154          void SpiInit(void)
+ 155          {
+ 156   1          CSN=0;
+ 157   1          SCK=0;
+ 158   1          CSN=1;
+ 159   1      }
+ 160          
+ 161          //*****************************************************************************************
+ 162          //函数名：void UART_init()
+ 163          //输入：无
+ 164          //输出：无
+ 165          //功能描述：配置串口通讯协议 9600 8 N 1 开启全局中断
+ 166          //*****************************************************************************************
+ 167          void UART_init(void)
+ 168          {
+ 169   1          SCON = 0x50;                // uart in mode 1 (8 bit), REN=1
+C51 COMPILER V9.00   MCU_CONFIG                                                            10/09/2013 15:45:53 PAGE 4   
+
+ 170   1          TMOD|= 0x20;                // Timer 1 in mode 2
+ 171   1          TH1  = 0xFD;                // 9600 Bds at 11.059MHz
+ 172   1          TL1  = 0xFD;                // 9600 Bds at 11.059MHz
+ 173   1          TR1 = 1;                    // Timer 1 run
+ 174   1          ET1 =0; 
+ 175   1          
+ 176   1          //WAKE_CLKO = 0x40;            // 使能下降沿唤醒MCU，从掉电模式
+ 177   1          ES=1;                        // 开启串行口中断
+ 178   1      }
+ 179          
+ 180          //*****************************************************************************************
+ 181          //函数名：void Log_printf(INT8U *p_log)
+ 182          //输入：INT8U *p_log
+ 183          //输出：*p_log指向的字符串
+ 184          //功能描述：通过串口生成日志文件
+ 185          //*****************************************************************************************
+ 186          void Log_printf(INT8U *p_log)
+ 187          {
+ 188   1        ES = 0;                       // 禁止串口中断
+ 189   1        while(*p_log!=0)
+ 190   1        {
+ 191   2          SBUF = *p_log;
+ 192   2          while (!TI) ;
+ 193   2          TI=0;
+ 194   2          p_log++;
+ 195   2        }
+ 196   1        ES = 1;                       // 允许串口中断
+ 197   1      }
+ 198          
+ 199          /*****************************************************************************************
+ 200          //函数名：CpuInit()
+ 201          //输入：无
+ 202          //输出：无
+ 203          //功能描述：SPI初始化程序，点亮LED4，初始化INT1
+ 204          /*****************************************************************************************/
+ 205          void CpuInit(void)
+ 206          {  
+ 207   1        
+ 208   1          //LED_R = ~LED_R;
+ 209   1          IapReadModelSn(MODEL_SN_ADDRESS,&g_module_id);
+ 210   1          IapReadModelSn(GATEWAY_ADDRESS,&g_gateway);
+ 211   1          Timer0_Init(1);
+ 212   1          Int1Init();
+ 213   1          UART_init();   
+ 214   1          SpiInit();
+ 215   1          
+ 216   1          delay(50000);
+ 217   1          delay(50000);
+ 218   1          LED_D4 = ~LED_D4;
+ 219   1          delay(50000);
+ 220   1          delay(50000);
+ 221   1          LED_D4 = ~LED_D4; 
+ 222   1          delay(50000);
+ 223   1          delay(50000);
+ 224   1          LED_D4 = ~LED_D4; 
+ 225   1      }
+ 226          
+ 227          //*****************************************************************************************
+ 228          //函数名：SpisendByte(INT8U dat)
+ 229          //输入：发送的数据
+ 230          //输出：无
+ 231          //功能描述：SPI发送一个字节
+C51 COMPILER V9.00   MCU_CONFIG                                                            10/09/2013 15:45:53 PAGE 5   
+
+ 232          //*****************************************************************************************
+ 233          INT8U SpiTxRxByte(INT8U dat)
+ 234          {
+ 235   1          INT8U i,temp;
+ 236   1          temp = 0;
+ 237   1          
+ 238   1          SCK = 0;
+ 239   1          for(i=0; i<8; i++)
+ 240   1          {
+ 241   2              if(dat & 0x80)
+ 242   2              {
+ 243   3                  MOSI = 1;
+ 244   3              }
+ 245   2              else MOSI = 0;
+ 246   2              dat <<= 1;
+ 247   2              
+ 248   2              SCK = 1; 
+ 249   2              //for(i=0;i<2;i++) 
+ 250   2              //{
+ 251   2              _nop_();
+ 252   2              _nop_();
+ 253   2              _nop_();
+ 254   2              _nop_();
+ 255   2              _nop_();
+ 256   2              _nop_();
+ 257   2              //}
+ 258   2              
+ 259   2              temp <<= 1;
+ 260   2              if(MISO)temp++; 
+ 261   2              SCK = 0;
+ 262   2              //for(i=0;i<2;i++) 
+ 263   2              //{
+ 264   2              _nop_();
+ 265   2              _nop_();
+ 266   2              _nop_();
+ 267   2              _nop_();
+ 268   2              _nop_();
+ 269   2              _nop_();
+ 270   2              //} 
+ 271   2          }
+ 272   1          return temp;
+ 273   1      }
+ 274          
+ 275          //*****************************************************************************************
+ 276          //函数名：void  Timer0_Init(INT16U ms)
+ 277          //输入：定时Xms，注意别超过INT16范围
+ 278          //输出：无
+ 279          //功能描述：配置串口通讯协议 9600 8 N 1 开启全局中断
+ 280          //*****************************************************************************************
+ 281          void  Timer0_Init(INT16U ms)
+ 282          {
+ 283   1          INT16U ms_count=0;
+ 284   1          
+ 285   1          ms_count = 65536-F_mcu*ms/12/1000;
+ 286   1          
+ 287   1          TMOD |= 0x01;         // 设定定时器0为模式1
+ 288   1          TL0   = ms_count;
+ 289   1          TH0   = ms_count>>8;
+ 290   1          
+ 291   1          //TR0   = 1;            // 开启定时器0
+ 292   1          ET0   = 1;          // 使能定时器0
+ 293   1      }
+C51 COMPILER V9.00   MCU_CONFIG                                                            10/09/2013 15:45:53 PAGE 6   
+
+ 294          
+ 295          //*****************************************************************************************
+ 296          //函数名：void Usart_printf(INT8U *p_uart,INT8U num)
+ 297          //输入：INT8U *p_uart，INT8U num
+ 298          //输出：*p_uart指向的数组数据
+ 299          //功能描述：发送num个数据
+ 300          //*****************************************************************************************
+ 301          void Usart_printf(INT8U *p_uart,INT8U num)
+ 302          {
+ 303   1        ES = 0;
+ 304   1        while( (num--) != 0 )
+ 305   1        {
+ 306   2          SBUF = *p_uart;
+ 307   2          while (!TI) ;
+ 308   2          TI=0;
+ 309   2          p_uart++;
+ 310   2        }
+ 311   1        ES = 1;
+ 312   1      }
+ 313          
+ 314          //*****************************************************************************************
+ 315          //函数名：delay(unsigned int s)
+ 316          //输入：时间
+ 317          //输出：无
+ 318          //功能描述：普通廷时,内部用
+ 319          //*****************************************************************************************   
+ 320          void delay(unsigned int s)
+ 321          {
+ 322   1          unsigned int i;
+ 323   1          //for(i=0;i<2;i++)
+ 324   1          //{
+ 325   1          for(i=0; i<s; i++);
+ 326   1          for(i=0; i<s; i++);
+ 327   1          //}
+ 328   1      }
+ 329          
+ 330          //*****************************************************************************************
+ 331          //函数名：void uart_isr()  interrupt 4
+ 332          //输入：无
+ 333          //输出：接收到的串口数据
+ 334          //功能描述：中断接收串口数据帧
+ 335          //*****************************************************************************************   
+ 336          void uart_isr()  interrupt 4   //串口中断
+ 337          {
+ 338   1          if(RI)                // RI为1，向主机请求中断，手动清零
+ 339   1          {
+ 340   2              TxBuf[g_count]=SBUF;
+ 341   2              
+ 342   2              if(TxBuf[0]!=0xAA)
+ 343   2              {
+ 344   3                g_count = 0;  
+ 345   3              }
+ 346   2              else
+ 347   2              {
+ 348   3                g_count++;
+ 349   3                if(g_count>10)    // 共计11个字节，数组从0~10
+ 350   3                {
+ 351   4                  
+ 352   4                  g_rx_flag = 0x55;
+ 353   4                }
+ 354   3              }
+ 355   2              RI=0;
+C51 COMPILER V9.00   MCU_CONFIG                                                            10/09/2013 15:45:53 PAGE 7   
+
+ 356   2          }
+ 357   1      }
+ 358          
+ 359          //*****************************************************************************************
+ 360          //函数名：void ser()  interrupt 4
+ 361          //输入：无
+ 362          //输出：接收到的串口数据
+ 363          //功能描述：中断接收串口数据帧，定时2s
+ 364          //***************************************************************************************** 
+ 365          void timer0_isr()  interrupt 1   //Timer0中断
+ 366          {
+ 367   1        if( 0xFF == g_search )
+ 368   1          Timer0_Init(10);
+ 369   1        else 
+ 370   1          Timer0_Init(1);
+ 371   1          
+ 372   1        timer++;
+ 373   1        if(timer>=1000)
+ 374   1        {
+ 375   2          //g_rx_timeout = 0x55;
+ 376   2          //g_rf_rx_flag = 0x00;
+ 377   2          //g_wor_flag = 0x00;        // 定时时间到，退出全速接收模式
+ 378   2          g_enter_rx = 0x00;
+ 379   2          //LED_D3 = ~LED_D3;
+ 380   2          timer = 0;
+ 381   2          TIMER0_OFF;               // 关闭定时器
+ 382   2        }
+ 383   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    699    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----      11
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

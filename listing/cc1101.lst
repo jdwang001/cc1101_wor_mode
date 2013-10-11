@@ -1,0 +1,211 @@
+C51 COMPILER V9.00   CC1101                                                                08/13/2013 21:34:00 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE CC1101
+OBJECT MODULE PLACED IN .\output\cc1101.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE cc1101.c LARGE BROWSE DEBUG OBJECTEXTEND PRINT(.\listing\cc1101.lst) OBJECT
+                    -(.\output\cc1101.obj)
+
+line level    source
+
+   1          /*
+   2          ** ¶«·½ºìµç×Ó
+   3          ** CC1101 433MHzÎÞÏßÄ£¿éÏà»¥Í¨ÐÅ£¬Á½¸ö½ÚµãÉÕÐ´Ò»ÑùµÄ³ÌÐò
+   4          ** 2012-09-14
+   5          */
+   6          
+   7          //#include <reg52.h>
+   8          
+   9          #include "rf_config.h"
+  10          /*
+  11          sbit    GDO0    =P1^1;
+  12          sbit    GDO2    =P1^2;
+  13          sbit    MISO    =P1^3;
+  14          sbit    MOSI    =P1^5;
+  15          sbit    SCK             =P1^4;
+  16          sbit    CSN             =P1^0;
+  17          */
+  18          
+  19          INT8U _1s_counter,leng,count = 0; 
+  20          INT8U flag_rx = 0;
+  21          INT8U TxBuf[64];                                // 11×Ö½Ú, Èç¹ûÐèÒª¸ü³¤µÄÊý¾Ý°ü,ÇëÕýÈ·ÉèÖÃ
+  22          INT8U RxBuf[64];
+  23          //***************¸ü¶à¹¦ÂÊ²ÎÊýÉèÖÃ¿ÉÏêÏ¸²Î¿¼DATACC1100Ó¢ÎÄÎÄµµÖÐµÚ48-49Ò³µÄ²ÎÊý±í******************
+  24          //INT8U PaTabel[8] = {0x04 ,0x04 ,0x04 ,0x04 ,0x04 ,0x04 ,0x04 ,0x04};  //-30dBm   ¹¦ÂÊ×îÐ¡
+  25          //INT8U PaTabel[8] = {0x60 ,0x60 ,0x60 ,0x60 ,0x60 ,0x60 ,0x60 ,0x60};  //0dBm
+  26          INT8U PaTabel[8] = {0xC0 ,0xC0 ,0xC0 ,0xC0 ,0xC0 ,0xC0 ,0xC0 ,0xC0};
+  27          const RF_SETTINGS rfSettings = 
+  28          {
+  29                          0x00,           
+  30                  0x08,   // FSCTRL1   Frequency synthesizer control.   IF£¨ÖÐÆµ intermediate frequence£© ¾§ÕñÆµÂÊ*v
+             -al/2^10  = 203.125khz
+  31                  0x00,   // FSCTRL0   Frequency synthesizer control.             Fxtal/2^14 = 1.59k 
+  32                  
+  33                  0x10,   // FREQ2     Frequency control word, high byte. Fcarrier = ¾§ÕñÆµÂÊ*val/2^16 = 433Mhz  ¶¨Ò
+             -åÁËÖÐÐÄÆµÂÊ
+  34                  0xA7,   // FREQ1     Frequency control word, middle byte.  
+  35                  0x62,   // FREQ0     Frequency control word, low byte.
+  36          
+  37                                          // ¿ÕÖÐ²¨ÌØÂÊ 100kbaud£¬ÔØ²¨ÆµÂÊ433MHZ ·ÇManchester±àÂë 4ByteÍ¬²½×Ö(30/32Í¬²½×ÖÖÊÁ¿Ä£Ê½)£¬2-FSK
+  38                  // MDMCFG4Ö¸¶¨ÁËÐÅµÀ´ø¿í
+  39                  // MDMCFG3Ö¸¶¨ÁË¿ÕÖÐ²¨ÌØÂÊ
+  40                  // MDMCFG2Ö¸¶¨ÂË²¨Æ÷£¬ÎÞÏßÐÅºÅµ÷ÖÆ¸ñÊ½£¬4ByteÇ°µ¼Âë£¬4ByteÍ¬²½×Ö(30/32Í¬²½×ÖÖÊÁ¿Ä£Ê½)
+  41                  // ÅäÖÃÃ¿¸öÐÅµÀµÄ´ø¿í
+  42                  0x5B,   // MDMCFG4   Modem configuration.               CHANBW_E = 01   CHANBW_M =01 DRATE_E = 11       BW_channel = Fx
+             -osc/£¨8*£¨4+CHANBW_M£©*2^CHANBW_E£©= 325khz   
+  43                  0xF8,   // MDMCFG3   Modem configuration.               DRATE_M = 248 Rdata = 100kBaud  ¿ÕÖÐ²¨ÌØÂÊ
+  44                  0x03,   // MDMCFG2   Modem configuration.               DEM_DCFILT_OFF=0 MOD_FORMAT=000 MANCHESTER_EN=0£¨²»Ê¹ÄÜ
+             -£©SYNC_MODE = 011(30/32sync word bits detected)
+  45                  0x22,   // MDMCFG1   Modem configuration.               FEC_EN=0(disable) NUM_PREAMBLE=010(4byteÇ°µ¼Âë) NU=00 C
+             -HANSPC_E=10  
+  46                  0xF8,   // MDMCFG0   Modem configuration.               ²»±Ø¹ØÐÄ
+  47                  
+  48                  // 0ÐÅµÀ
+  49                  0x00,   // CHANNR    Channel number.                            
+C51 COMPILER V9.00   CC1101                                                                08/13/2013 21:34:00 PAGE 2   
+
+  50                  0x47,   // DEVIATN   Modem deviation setting (when FSK modulation is enabled).
+  51                  
+  52                  // ÉÙÁËÁ½¸öÅäÖÃ£¬Ö÷ÒªÕë¶ÔÓÚworÄ£Ê½µÄ²Ù×÷
+  53                  // MCSM2 WORÄ£Ê½ÐèÒª¼Ä´æÆ÷ Ðè½øÐÐÅäÖÃ  RX_TIME[2:0]
+  54                  // MCSM1 RXOFF_MODE ½ÓÊÕÊý¾Ý°üºó£¬RFµÄ×´Ì¬
+  55                  
+  56                  0xB6,   // FREND1    Front end RX configuration.
+  57                  0x10,   // FREND0    Front end RX configuration.
+  58                  
+  59                  // MCSM2
+  60                  // MCSM1                 RXOFF_MODE  TXOFF_MODE Í¬Ê±ÅäÖÃÎª½ÓÊÕÍê³É»ò·¢ËÍÍê³Éºó ÇÐ»»µ½IDLEÄ£Ê½
+  61                  0x18,   // MCSM0     Main Radio Control State Machine configuration.   
+  62                  
+  63                  0x1D,   // FOCCFG    Frequency Offset Compensation Configuration.
+  64                  0x1C,   // BSCFG     Bit synchronization Configuration.
+  65                  0xC7,   // AGCCTRL2  AGC control.
+  66                  0x00,   // AGCCTRL1  AGC control.
+  67                  0xB2,   // AGCCTRL0  AGC control.
+  68                  
+  69                  0xEA,   // FSCAL3    Frequency synthesizer calibration.
+  70                  0x2A,   // FSCAL2    Frequency synthesizer calibration.
+  71                  0x00,   // FSCAL1    Frequency synthesizer calibration.
+  72                  0x11,   // FSCAL0    Frequency synthesizer calibration.
+  73                  
+  74                  0x59,   // FSTEST    Frequency synthesizer calibration.
+  75                  0x81,   // TEST2     Various test settings.
+  76                  0x35,   // TEST1     Various test settings.
+  77                  0x09,   // TEST0     Various test settings.
+  78                  0x0B,   // IOCFG2    GDO2 output pin configuration.
+  79                  0x06,   // IOCFG0    GDO0 output pin configuration. Refer to SmartRF?Studio User Manual for detail
+             -ed pseudo register explanation.
+  80                  // Í¨¹ý²éÑ¯GDO0À´È·ÈÏÊÇ·ñ½ÓÊÕµ½Êý¾Ý ½ÓÊÕµ½Êý¾Ý°üÖÃÎ» Êý¾Ý°üÄ©Î²½áÊøÖÃÎ»
+  81                  
+  82                  0x04,   // PKTCTRL1  Packet automation control.         APPEND_STATUS=1Ôö¼ÓÁ½¸ö×´Ì¬×Ö½ÚÒÔ¼°CRC_OK±ê¼ÇÔö¼Ó
+             -ÔÚÊý¾Ý°üÓÐÐ§¸ºÔØÉÏ ADR_CHK=00ÎÞµØÖ·Ð£Ñé
+  83                  0x05,   // PKTCTRL0  Packet automation control.         NU=0 WHITE_DATA=1¹Ø±ÕÊý¾Ý°×»¯ PKT_FORMAT=00(use F
+             -IFOs for RX and TX) NU=0 CRC_EN=1 LENGTH_CONFIG=01¿É±ä³¤¶È°üÄ£Ê½
+  84                  0x00,   // ADDR      Device address.
+  85                  0x0c    // PKTLEN    Packet length.                                                             ¿É±äÊý¾Ý°üÄ£Ê½ÏÂ£¬¿É·¢ËÍµÄ×î´ó×î´ó×Ö½Ú
+  86          };
+  87          
+  88          /////////////////////////////////////////////////////////////////
+  89          /*¶¨ÒåÁËÒ»¸öRF_SETTINGS½á¹¹Ìå±äÁ¿ rfSettings*/
+  90          // ¶ÔÊ¹ÓÃµÄ35¸ö¼Ä´æÆ÷½øÐÐ¸³Öµ
+  91          
+  92          
+  93          INT16U GucCount;
+  94          void main()
+  95          {
+  96   1          //CLK_DIV|=0x03;
+  97   1          INT8U i,s_count=0;;
+  98   1          leng =11; // Ô¤¼Æ½ÓÊÕ 11 bytes 
+  99   1          UART_init();
+ 100   1          CpuInit();
+ 101   1          POWER_UP_RESET_CC1100();
+ 102   1          halRfWriteRfSettings();
+ 103   1          halSpiWriteBurstReg(CCxxx0_PATABLE, PaTabel, 8);
+ 104   1          //CC1101_InitWOR(300);
+ 105   1              CC1101_Setwor();
+ 106   1              //Log_printf("Test wor\n");
+ 107   1          GucCount = 0;
+ 108   1          while (1)
+C51 COMPILER V9.00   CC1101                                                                08/13/2013 21:34:00 PAGE 3   
+
+ 109   1          {
+ 110   2                      
+ 111   2              if ( flag_rx == 0x55 )
+ 112   2              {
+ 113   3                      flag_rx = 0;
+ 114   3                              //Usart_printf(&count,1);
+ 115   3                              //Usart_printf(TxBuf,count);
+ 116   3      
+ 117   3                  halRfSendPacket(TxBuf,count);       // Transmit Tx buffer data
+ 118   3                  LED_R=~LED_R;
+ 119   3                  count = 0;
+ 120   3              }
+ 121   2                      PCON |= PD_ON; 
+ 122   2              
+ 123   2              /*
+ 124   2              if (GucCount++ > 1000)
+ 125   2              {
+ 126   2                  GucCount = 0;
+ 127   2                  halRfSendPacket(TxBuf,11);  // Transmit Tx buffer data
+ 128   2                  LED_R = ~LED_R;
+ 129   2              }        
+ 130   2              */
+ 131   2                      
+ 132   2                      //if(halRfReceivePacket(RxBuf,&leng))
+ 133   2      //                      while(GDO0)
+ 134   2      //              if(CC1101_Worwakeup(RxBuf,&leng))
+ 135   2      //              {                                                               
+ 136   2      //                  LED_B0 = ~LED_B0; 
+ 137   2                          //delay(5);
+ 138   2      //                  ES=0;
+ 139   2      //                              
+ 140   2      //                  for(i=0;i<s_count; i++)
+ 141   2      //                  {                     
+ 142   2      //                      SBUF=RxBuf[i];
+ 143   2      //                      while (!TI)     ;
+ 144   2      //                      TI=0;
+ 145   2      //                  }
+ 146   2      //                  ES=1;
+ 147   2                              // GucCount = 0;
+ 148   2                          //delay(10000);
+ 149   2                          //halRfSendPacket(TxBuf,11);        // Transmit Tx buffer data
+ 150   2      //              }
+ 151   2              
+ 152   2      //        if(halRfReceivePacket(RxBuf,&leng))
+ 153   2      //        {                                                             
+ 154   2      //            LED_B0 = ~LED_B0; 
+ 155   2      //            //delay(5);
+ 156   2      //            ES=0;
+ 157   2      //                      
+ 158   2      //            for(i=0;i<11; i++)
+ 159   2      //            {                   
+ 160   2      //                SBUF=RxBuf[i];
+ 161   2      //                while (!TI)   ;
+ 162   2      //                TI=0;
+ 163   2      //            }
+ 164   2      //            ES=1;
+ 165   2      //
+ 166   2      //              // GucCount = 0;
+ 167   2      //            //delay(10000);
+ 168   2      //            //halRfSendPacket(TxBuf,11);      // Transmit Tx buffer data
+ 169   2      //        }
+ 170   2              
+C51 COMPILER V9.00   CC1101                                                                08/13/2013 21:34:00 PAGE 4   
+
+ 171   2          }
+ 172   1      }
+*** WARNING C280 IN LINE 97 OF CC1101.C: 'i': unreferenced local variable
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     85    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =    177       2
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)
