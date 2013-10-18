@@ -1,4 +1,4 @@
-C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 1   
+C51 COMPILER V9.00   RF_CONFIG                                                             10/18/2013 10:02:43 PAGE 1   
 
 
 C51 COMPILER V9.00, COMPILATION OF MODULE RF_CONFIG
@@ -62,7 +62,7 @@ line level    source
   52          
   53          //*****************************************************************************************
   54          //函数名：void POWER_UP_RESET_CC1100(void) 
-C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 2   
+C51 COMPILER V9.00   RF_CONFIG                                                             10/18/2013 10:02:43 PAGE 2   
 
   55          //输入：无
   56          //输出：无
@@ -126,7 +126,7 @@ line level    source
  114   1          while (MISO);
  115   1          SpiTxRxByte(strobe);    //写入命令
  116   1          CSN = 1;
-C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 3   
+C51 COMPILER V9.00   RF_CONFIG                                                             10/18/2013 10:02:43 PAGE 3   
 
  117   1      }
  118          
@@ -190,7 +190,7 @@ line level    source
  176          //    INT8U value,temp;
  177          //    temp = addr | READ_SINGLE;    //写入要读的状态寄存器的地址同时写入读命令
  178          //    CSN = 0;
-C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 4   
+C51 COMPILER V9.00   RF_CONFIG                                                             10/18/2013 10:02:43 PAGE 4   
 
  179          //    while (MISO);
  180          //    SpiTxRxByte(temp);
@@ -254,7 +254,7 @@ line level    source
  238          //功能描述：CC1101发送一组数据
  239          //*****************************************************************************************
  240          void halRfSendPacket(INT8U *txBuffer, INT8U size) 
-C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 5   
+C51 COMPILER V9.00   RF_CONFIG                                                             10/18/2013 10:02:43 PAGE 5   
 
  241          {
  242   1          INT8U registerstatus;
@@ -318,7 +318,7 @@ line level    source
  300   2              if (packetLength <= *length)    //如果所要的有效数据长度小于等于接收到的数据包的长度
  301   2              {
  302   3                //Log_printf("rx data  ");
-C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 6   
+C51 COMPILER V9.00   RF_CONFIG                                                             10/18/2013 10:02:43 PAGE 6   
 
  303   3                  halSpiReadBurstReg(CCxxx0_RXFIFO, rxBuffer, packetLength); //读出所有接收到的数据
  304   3                  *length = packetLength;       //把接收数据长度的修改为当前数据的长度
@@ -382,7 +382,7 @@ line level    source
  361          //            }
  362          //            else
  363          //            { 
-C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 7   
+C51 COMPILER V9.00   RF_CONFIG                                                             10/18/2013 10:02:43 PAGE 7   
 
  364          //              return 0;
  365          //            }
@@ -446,7 +446,7 @@ line level    source
  422   2          
  423   2            if ( packetLength > 2 ) 
  424   2            {   
-C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 8   
+C51 COMPILER V9.00   RF_CONFIG                                                             10/18/2013 10:02:43 PAGE 8   
 
  425   3                halSpiReadBurstReg(CCxxx0_RXFIFO, rxBuffer, packetLength);  // 读出所有接收到的数据
  426   3                //*length = packetLength;                                   // 把接收数据长度的修改为当前数据的长度
@@ -510,7 +510,7 @@ line level    source
  484   2            {
  485   3                halSpiReadBurstReg(CCxxx0_RXFIFO, wor_data, packetLength);  // 读出所有接收到的数据
  486   3                if ( (wor_data[0]==BROADCAST && wor_data[1]==BROADCAST) || ( (wor_data[0]==(g_module_id.Sn[0]&MCU_ID)
-C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 9   
+C51 COMPILER V9.00   RF_CONFIG                                                             10/18/2013 10:02:43 PAGE 9   
 
              -) && (wor_data[1]==g_module_id.Sn[1]) ) )
  487   3                //if ( (wor_data[0]==0x55 && wor_data[1]==0xAA) || (wor_data[0]==g_module_id && wor_data[1]==g_module
@@ -574,7 +574,7 @@ line level    source
  544          //            //return (status[1] & CRC_OK);      //如果校验成功返回接收成功
  545          //            if( status[1] & CRC_OK )
  546          //            {
-C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 10  
+C51 COMPILER V9.00   RF_CONFIG                                                             10/18/2013 10:02:43 PAGE 10  
 
  547          //              Usart_printf(rxBuffer,packetLength);
  548          //              g_rf_rx_flag = 0x00;
@@ -638,7 +638,7 @@ line level    source
  604          //*****************************************************************************************
  605          //INT8U CC1101_Worwakeup(void) 
  606          //{
-C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 11  
+C51 COMPILER V9.00   RF_CONFIG                                                             10/18/2013 10:02:43 PAGE 11  
 
  607          //    INT8U wor_data[2],status[2];
  608          //    INT8U packetLength;
@@ -702,7 +702,7 @@ line level    source
  664          //    halSpiStrobe(CCxxx0_SWOR);                                          //启动WOR 
  665          //    INT1_ON;                        //2013年8月15日16:22:59
  666          //    return 0;
-C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 12  
+C51 COMPILER V9.00   RF_CONFIG                                                             10/18/2013 10:02:43 PAGE 12  
 
  667          //}
  668          
@@ -766,7 +766,7 @@ line level    source
  724   1          {
  725   2            Log_printf("Not packet\n");
  726   2          }
-C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 13  
+C51 COMPILER V9.00   RF_CONFIG                                                             10/18/2013 10:02:43 PAGE 13  
 
  727   1          
  728   1          halSpiStrobe(CCxxx0_SFRX); 
@@ -830,7 +830,7 @@ line level    source
  785          //功能描述：唤醒后，关闭PD，置位wor_flag
  786          //***************************************************************************************** 
  787          void Rf_wakeup() interrupt  2
-C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 14  
+C51 COMPILER V9.00   RF_CONFIG                                                             10/18/2013 10:02:43 PAGE 14  
 
  788          {
  789   1         INT1_OFF;
@@ -894,7 +894,7 @@ line level    source
  846          // 
  847          //  //由于计算的值普遍偏大,如果照常计算会出现溢出, 所以分段处理
  848          //  EVENT0 = F_xosc/1000;
-C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 15  
+C51 COMPILER V9.00   RF_CONFIG                                                             10/18/2013 10:02:43 PAGE 15  
 
  849          //  if(EVENT0>Time)
  850          //  {
@@ -958,7 +958,7 @@ line level    source
  906          // 
  907          void CC1101_Wakeupcarry(INT8U *worcarry, INT8U size,INT8U s)
  908          {
-C51 COMPILER V9.00   RF_CONFIG                                                             10/09/2013 15:45:53 PAGE 16  
+C51 COMPILER V9.00   RF_CONFIG                                                             10/18/2013 10:02:43 PAGE 16  
 
  909   1          INT16U  s_count;
  910   1          //s_count = s*1044/5;

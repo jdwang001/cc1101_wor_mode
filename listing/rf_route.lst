@@ -1,4 +1,4 @@
-C51 COMPILER V9.00   RF_ROUTE                                                              10/09/2013 15:45:54 PAGE 1   
+C51 COMPILER V9.00   RF_ROUTE                                                              10/18/2013 10:02:43 PAGE 1   
 
 
 C51 COMPILER V9.00, COMPILATION OF MODULE RF_ROUTE
@@ -62,7 +62,7 @@ line level    source
   52   1      //  
   53   1      //  Log_printf("Test_id:");
   54   1      //  Usart_printf(&(temp_id_1),1);
-C51 COMPILER V9.00   RF_ROUTE                                                              10/09/2013 15:45:54 PAGE 2   
+C51 COMPILER V9.00   RF_ROUTE                                                              10/18/2013 10:02:43 PAGE 2   
 
   55   1      //  Usart_printf(&(temp_id_2),1);
   56   1      
@@ -126,7 +126,7 @@ line level    source
  113   2          for(i=0;i<routedatalength;i++)
  114   2            psentrfdata[8+i] = *(routepacket->RfRouteData.pRouteData+i);
  115   2        }
-C51 COMPILER V9.00   RF_ROUTE                                                              10/09/2013 15:45:54 PAGE 3   
+C51 COMPILER V9.00   RF_ROUTE                                                              10/18/2013 10:02:43 PAGE 3   
 
  116   1        // 计算出数据类型后的下标
  117   1        routeprotocol = routedatalength +2+6;                              // routelength+2+6 = 下一字段下标
@@ -190,7 +190,7 @@ line level    source
  175   1        
  176   1      //  registerstatus = halSpiReadStatus(CCxxx0_FIFOTHR);
  177   1      //  Usart_printf(&registerstatus,1);
-C51 COMPILER V9.00   RF_ROUTE                                                              10/09/2013 15:45:54 PAGE 4   
+C51 COMPILER V9.00   RF_ROUTE                                                              10/18/2013 10:02:43 PAGE 4   
 
  178   1        
  179   1        //halRfSendPacket(psentrfdata,psentrfdata[1]+3);
@@ -254,7 +254,7 @@ line level    source
  237   2          {
  238   3            //Log_printf("  route  ");
  239   3            for (i=0; i<2; i++)
-C51 COMPILER V9.00   RF_ROUTE                                                              10/09/2013 15:45:54 PAGE 5   
+C51 COMPILER V9.00   RF_ROUTE                                                              10/18/2013 10:02:43 PAGE 5   
 
  240   3            {
  241   4              // (routepacket->RfRouteData.CRPL-1)*2-2   
@@ -318,7 +318,7 @@ line level    source
  299   1        // 接收到数据后通过广播转发出去
  300   1        // 搜索路由时，暂时这样处理
  301   1        if ( 0x81 == routepacket->Key ) 
-C51 COMPILER V9.00   RF_ROUTE                                                              10/09/2013 15:45:54 PAGE 6   
+C51 COMPILER V9.00   RF_ROUTE                                                              10/18/2013 10:02:43 PAGE 6   
 
  302   1        {
  303   2          // 进行广播唤醒 搜寻路径
@@ -382,7 +382,7 @@ line level    source
  361   2          IapEraseSector(ROUTEDATA_NUM);
  362   2          IapProgramByte(ROUTEDATA_NUM,g_route_size);
  363   2      
-C51 COMPILER V9.00   RF_ROUTE                                                              10/09/2013 15:45:54 PAGE 7   
+C51 COMPILER V9.00   RF_ROUTE                                                              10/18/2013 10:02:43 PAGE 7   
 
  364   2          switch( g_route_size )
  365   2          {
@@ -446,7 +446,7 @@ line level    source
  423          ////    }  
  424          //// 
  425          ////  if( routedatalength != 0 )
-C51 COMPILER V9.00   RF_ROUTE                                                              10/09/2013 15:45:54 PAGE 8   
+C51 COMPILER V9.00   RF_ROUTE                                                              10/18/2013 10:02:43 PAGE 8   
 
  426          ////  {
  427          ////    for(i=0;i<routedatalength;i++)
@@ -510,7 +510,7 @@ line level    source
  485          //  // 数据段长度
  486          //  datalength = routepacket->Length - ( routedatalength+2 ) - 4 - 5;     // 传感器数据长度
  487          //  if( datalength != 0 )
-C51 COMPILER V9.00   RF_ROUTE                                                              10/09/2013 15:45:54 PAGE 9   
+C51 COMPILER V9.00   RF_ROUTE                                                              10/18/2013 10:02:43 PAGE 9   
 
  488          //  {
  489          //    for( i=0;i<datalength;i++ )
@@ -574,7 +574,7 @@ line level    source
  547   1        routepacket->RfRouteData.CRPL =  prfdata[7];
  548   1        
  549   1        // 对路由数据进行处理  Orien 由1开始 0101 xxxx 为终端到基站
-C51 COMPILER V9.00   RF_ROUTE                                                              10/09/2013 15:45:54 PAGE 10  
+C51 COMPILER V9.00   RF_ROUTE                                                              10/18/2013 10:02:43 PAGE 10  
 
  550   1        routedatalength = ( (routepacket->RfRouteData.Orien & 0x0F)-1)*2;
  551   1        // 当路由深度为0时，pRouteData不指向数组
@@ -638,7 +638,7 @@ line level    source
  609   1          if( IsMe(routepacket) )
  610   1          {
  611   2            //Log_printf("  0002  ");
-C51 COMPILER V9.00   RF_ROUTE                                                              10/09/2013 15:45:54 PAGE 11  
+C51 COMPILER V9.00   RF_ROUTE                                                              10/18/2013 10:02:43 PAGE 11  
 
  612   2            //Key 命令字为0x01时 为分配路由级别命令 命令字为0x03时，为传输数据命令
  613   2            switch( routepacket->Key )    
@@ -702,7 +702,7 @@ line level    source
  671          // 0x03   基站请求数据命令
  672          // 0x83   终端响应请求数据命令      
  673          
-C51 COMPILER V9.00   RF_ROUTE                                                              10/09/2013 15:45:54 PAGE 12  
+C51 COMPILER V9.00   RF_ROUTE                                                              10/18/2013 10:02:43 PAGE 12  
 
  674          
  675          
@@ -766,7 +766,7 @@ line level    source
  733          //    case 0x01:  
  734          //      //SwitchRoute(routepacket);
  735          //      SubtractRoute(routepacket);
-C51 COMPILER V9.00   RF_ROUTE                                                              10/09/2013 15:45:54 PAGE 13  
+C51 COMPILER V9.00   RF_ROUTE                                                              10/18/2013 10:02:43 PAGE 13  
 
  736          //      break;
  737          //    

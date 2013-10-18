@@ -1,4 +1,4 @@
-C51 COMPILER V9.00   MCU_CONFIG                                                            10/09/2013 15:45:53 PAGE 1   
+C51 COMPILER V9.00   MCU_CONFIG                                                            10/18/2013 10:02:43 PAGE 1   
 
 
 C51 COMPILER V9.00, COMPILATION OF MODULE MCU_CONFIG
@@ -62,7 +62,7 @@ line level    source
   47          /*****************************************************************************************
   48          //函数名：void IapProgramByte(INT16U addr, INT8U dat)  
   49          //输入：addr：EEPROM地址，dat：EEPROM地址中的数据
-C51 COMPILER V9.00   MCU_CONFIG                                                            10/09/2013 15:45:53 PAGE 2   
+C51 COMPILER V9.00   MCU_CONFIG                                                            10/18/2013 10:02:43 PAGE 2   
 
   50          //输出：无
   51          //功能描述：写入一个字节
@@ -126,7 +126,7 @@ line level    source
  105          //函数名：void IapReadModelSn(INT16U addr,Model_Sn* sndata) 
  106          //输入：addr：EEPROM地址 data: 读出的数据
  107          //输出：无
-C51 COMPILER V9.00   MCU_CONFIG                                                            10/09/2013 15:45:53 PAGE 3   
+C51 COMPILER V9.00   MCU_CONFIG                                                            10/18/2013 10:02:43 PAGE 3   
 
  108          //功能描述：读取EEPROM内的数据
  109          /*****************************************************************************************/ 
@@ -190,7 +190,7 @@ line level    source
  167          void UART_init(void)
  168          {
  169   1          SCON = 0x50;                // uart in mode 1 (8 bit), REN=1
-C51 COMPILER V9.00   MCU_CONFIG                                                            10/09/2013 15:45:53 PAGE 4   
+C51 COMPILER V9.00   MCU_CONFIG                                                            10/18/2013 10:02:43 PAGE 4   
 
  170   1          TMOD|= 0x20;                // Timer 1 in mode 2
  171   1          TH1  = 0xFD;                // 9600 Bds at 11.059MHz
@@ -254,7 +254,7 @@ line level    source
  229          //输入：发送的数据
  230          //输出：无
  231          //功能描述：SPI发送一个字节
-C51 COMPILER V9.00   MCU_CONFIG                                                            10/09/2013 15:45:53 PAGE 5   
+C51 COMPILER V9.00   MCU_CONFIG                                                            10/18/2013 10:02:43 PAGE 5   
 
  232          //*****************************************************************************************
  233          INT8U SpiTxRxByte(INT8U dat)
@@ -318,7 +318,7 @@ line level    source
  291   1          //TR0   = 1;            // 开启定时器0
  292   1          ET0   = 1;          // 使能定时器0
  293   1      }
-C51 COMPILER V9.00   MCU_CONFIG                                                            10/09/2013 15:45:53 PAGE 6   
+C51 COMPILER V9.00   MCU_CONFIG                                                            10/18/2013 10:02:43 PAGE 6   
 
  294          
  295          //*****************************************************************************************
@@ -382,7 +382,7 @@ line level    source
  353   4                }
  354   3              }
  355   2              RI=0;
-C51 COMPILER V9.00   MCU_CONFIG                                                            10/09/2013 15:45:53 PAGE 7   
+C51 COMPILER V9.00   MCU_CONFIG                                                            10/18/2013 10:02:43 PAGE 7   
 
  356   2          }
  357   1      }

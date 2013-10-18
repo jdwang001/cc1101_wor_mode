@@ -1,4 +1,4 @@
-BL51 BANKED LINKER/LOCATER V6.22                                                        10/09/2013  15:45:54  PAGE 1
+BL51 BANKED LINKER/LOCATER V6.22                                                        10/18/2013  10:02:44  PAGE 1
 
 
 BL51 BANKED LINKER/LOCATER V6.22, INVOKED BY:
@@ -59,7 +59,7 @@ LINK MAP OF MODULE:  .\output\capinfo-rf_route (MCU_CONFIG)
                     000AH     0001H                  *** GAP ***
             CODE    000BH     0003H     ABSOLUTE     
             CODE    000EH     0003H     UNIT         ?PR?INT1INIT?MCU_CONFIG
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 2
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 2
 
 
                     0011H     0002H                  *** GAP ***
@@ -119,7 +119,7 @@ LINK MAP OF MODULE:  .\output\capinfo-rf_route (MCU_CONFIG)
 OVERLAY MAP OF MODULE:   .\output\capinfo-rf_route (MCU_CONFIG)
 
 
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 3
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 3
 
 
 SEGMENT                                       XDATA_GROUP
@@ -179,7 +179,7 @@ SEGMENT                                       XDATA_GROUP
 ?PR?HALRFWRITERFSETTINGS?RF_CONFIG          -----    -----
   +--> ?PR?_HALSPIWRITEREG?RF_CONFIG
 
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 4
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 4
 
 
 ?PR?_HALSPIWRITEREG?RF_CONFIG               0162H    0001H
@@ -239,7 +239,7 @@ SEGMENT                                       XDATA_GROUP
   +--> ?PR?_LOG_PRINTF?MCU_CONFIG
   +--> ?PR?_TIMER0_INIT?MCU_CONFIG
 
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 5
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 5
 
 
 ?PR?_CHECKROUTEDATA?RF_ROUTE                0146H    0008H
@@ -299,7 +299,7 @@ SYMBOL TABLE OF MODULE:  .\output\capinfo-rf_route (MCU_CONFIG)
   C:0000H         SYMBOL        _ICE_DUMMY_
   D:0080H         PUBLIC        P0
   D:00A0H         PUBLIC        P2
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 6
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 6
 
 
   D:00B0H         PUBLIC        P3
@@ -359,7 +359,7 @@ SYMBOL TABLE OF MODULE:  .\output\capinfo-rf_route (MCU_CONFIG)
   C:001BH         LINE#         20
   C:001DH         LINE#         21
   C:0020H         LINE#         22
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 7
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 7
 
 
   C:0022H         LINE#         23
@@ -419,7 +419,7 @@ SYMBOL TABLE OF MODULE:  .\output\capinfo-rf_route (MCU_CONFIG)
   -------         ENDDO         
   C:1DA6H         LINE#         110
   C:1DB5H         LINE#         111
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 8
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 8
 
 
   C:1DB5H         LINE#         113
@@ -479,7 +479,7 @@ SYMBOL TABLE OF MODULE:  .\output\capinfo-rf_route (MCU_CONFIG)
   C:2006H         LINE#         191
   C:2008H         LINE#         192
   C:200BH         LINE#         193
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 9
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 9
 
 
   C:200DH         LINE#         194
@@ -539,7 +539,7 @@ SYMBOL TABLE OF MODULE:  .\output\capinfo-rf_route (MCU_CONFIG)
   C:1F0BH         LINE#         265
   C:1F0CH         LINE#         266
   C:1F0DH         LINE#         267
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 10
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 10
 
 
   C:1F0EH         LINE#         268
@@ -599,7 +599,7 @@ SYMBOL TABLE OF MODULE:  .\output\capinfo-rf_route (MCU_CONFIG)
   C:1D67H         LINE#         338
   C:1D6AH         LINE#         339
   C:1D6AH         LINE#         340
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 11
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 11
 
 
   C:1D7AH         LINE#         342
@@ -659,7 +659,7 @@ SYMBOL TABLE OF MODULE:  .\output\capinfo-rf_route (MCU_CONFIG)
   D:0098H         PUBLIC        SCON
   D:0088H         PUBLIC        TCON
   B:0080H.2       PUBLIC        MISO
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 12
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 12
 
 
   C:1E6DH         PUBLIC        _CC1101_Wakeupcarry
@@ -719,7 +719,7 @@ SYMBOL TABLE OF MODULE:  .\output\capinfo-rf_route (MCU_CONFIG)
   -------         ENDPROC       POWER_UP_RESET_CC1100
   -------         PROC          _HALSPIWRITEREG
   D:0007H         SYMBOL        addr
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 13
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 13
 
 
   X:0162H         SYMBOL        value
@@ -779,7 +779,7 @@ SYMBOL TABLE OF MODULE:  .\output\capinfo-rf_route (MCU_CONFIG)
   C:20BBH         LINE#         133
   C:20BDH         LINE#         134
   C:20BDH         LINE#         135
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 14
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 14
 
 
   -------         ENDPROC       _HALSPIREADREG
@@ -839,7 +839,7 @@ SYMBOL TABLE OF MODULE:  .\output\capinfo-rf_route (MCU_CONFIG)
   C:1506H         LINE#         200
   C:1510H         LINE#         201
   C:151AH         LINE#         202
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 15
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 15
 
 
   C:1524H         LINE#         203
@@ -899,7 +899,7 @@ SYMBOL TABLE OF MODULE:  .\output\capinfo-rf_route (MCU_CONFIG)
   C:163CH         LINE#         269
   C:1647H         LINE#         270
   C:1647H         LINE#         273
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 16
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 16
 
 
   C:165BH         LINE#         276
@@ -959,7 +959,7 @@ SYMBOL TABLE OF MODULE:  .\output\capinfo-rf_route (MCU_CONFIG)
   C:11F6H         LINE#         425
   C:1205H         LINE#         429
   C:1208H         LINE#         430
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 17
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 17
 
 
   C:120DH         LINE#         432
@@ -1019,7 +1019,7 @@ SYMBOL TABLE OF MODULE:  .\output\capinfo-rf_route (MCU_CONFIG)
   C:134FH         LINE#         506
   C:134FH         LINE#         507
   C:1351H         LINE#         509
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 18
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 18
 
 
   C:1351H         LINE#         510
@@ -1079,7 +1079,7 @@ SYMBOL TABLE OF MODULE:  .\output\capinfo-rf_route (MCU_CONFIG)
   C:17DBH         LINE#         726
   C:17DBH         LINE#         728
   C:17E0H         LINE#         729
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 19
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 19
 
 
   C:17E5H         LINE#         730
@@ -1139,7 +1139,7 @@ SYMBOL TABLE OF MODULE:  .\output\capinfo-rf_route (MCU_CONFIG)
   X:0003H         PUBLIC        g_rid
   D:00A8H         PUBLIC        IE
   X:0004H         PUBLIC        g_test_count
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 20
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 20
 
 
   X:0005H         PUBLIC        g_route_size
@@ -1199,7 +1199,7 @@ SYMBOL TABLE OF MODULE:  .\output\capinfo-rf_route (MCU_CONFIG)
   C:0F9EH         LINE#         115
   C:0FA9H         LINE#         116
   C:0FB4H         LINE#         117
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 21
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 21
 
 
   C:0FBDH         LINE#         122
@@ -1259,7 +1259,7 @@ SYMBOL TABLE OF MODULE:  .\output\capinfo-rf_route (MCU_CONFIG)
   C:1164H         LINE#         198
   C:1169H         LINE#         199
   C:1169H         LINE#         206
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 22
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 22
 
 
   C:1169H         LINE#         207
@@ -1319,7 +1319,7 @@ SYMBOL TABLE OF MODULE:  .\output\capinfo-rf_route (MCU_CONFIG)
   C:1846H         LINE#         23
   C:1848H         LINE#         24
   C:1848H         LINE#         27
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 23
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 23
 
 
   C:1875H         LINE#         28
@@ -1379,7 +1379,7 @@ SYMBOL TABLE OF MODULE:  .\output\capinfo-rf_route (MCU_CONFIG)
   C:06F0H         LINE#         115
   C:06F0H         LINE#         117
   C:06F8H         LINE#         118
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 24
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 24
 
 
   C:0723H         LINE#         120
@@ -1439,7 +1439,7 @@ SYMBOL TABLE OF MODULE:  .\output\capinfo-rf_route (MCU_CONFIG)
   C:0120H         LINE#         215
   C:0144H         LINE#         222
   C:0158H         LINE#         223
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 25
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 25
 
 
   C:0161H         LINE#         225
@@ -1499,7 +1499,7 @@ SYMBOL TABLE OF MODULE:  .\output\capinfo-rf_route (MCU_CONFIG)
   C:052CH         LINE#         317
   C:0536H         LINE#         318
   C:0536H         LINE#         319
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 26
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 26
 
 
   C:0536H         LINE#         321
@@ -1559,7 +1559,7 @@ SYMBOL TABLE OF MODULE:  .\output\capinfo-rf_route (MCU_CONFIG)
   C:14A8H         LINE#         393
   C:14A8H         LINE#         394
   C:14A8H         LINE#         397
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 27
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 27
 
 
   C:14BBH         LINE#         399
@@ -1619,7 +1619,7 @@ SYMBOL TABLE OF MODULE:  .\output\capinfo-rf_route (MCU_CONFIG)
   C:0C6EH         LINE#         591
   C:0C7CH         LINE#         601
   -------         ENDPROC       _CHECKROUTEDATA
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 28
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 28
 
 
   -------         PROC          _RFROUTEMANAGE
@@ -1679,7 +1679,7 @@ SYMBOL TABLE OF MODULE:  .\output\capinfo-rf_route (MCU_CONFIG)
   -------         MODULE        ?C?ILDIX
   C:0D2AH         PUBLIC        ?C?ILDIX
   -------         ENDMOD        ?C?ILDIX
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 29
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 29
 
 
 
@@ -1739,7 +1739,7 @@ SYMBOL TABLE OF MODULE:  .\output\capinfo-rf_route (MCU_CONFIG)
     SEGMENT: ?PR?_IAPREAD2ARRAY?MCU_CONFIG
 
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/09/2013  15:45:54  PAGE 30
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/18/2013  10:02:44  PAGE 30
 
 
     SEGMENT: ?PR?_HALRFRECEIVEPACKET?RF_CONFIG
