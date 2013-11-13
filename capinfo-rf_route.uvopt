@@ -207,10 +207,10 @@
       <FileType>1</FileType>
       <tvExp>1</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>0</ColumnNumber>
+      <ColumnNumber>19</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>185</TopLine>
-      <CurrentLine>201</CurrentLine>
+      <TopLine>1</TopLine>
+      <CurrentLine>4</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>.\main.c</PathWithFileName>
       <FilenameWithoutPath>main.c</FilenameWithoutPath>
@@ -221,10 +221,10 @@
       <FileType>1</FileType>
       <tvExp>1</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>76</ColumnNumber>
+      <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>326</TopLine>
-      <CurrentLine>352</CurrentLine>
+      <TopLine>263</TopLine>
+      <CurrentLine>357</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>.\rf_route.c</PathWithFileName>
       <FilenameWithoutPath>rf_route.c</FilenameWithoutPath>
@@ -1650,13 +1650,13 @@
     <ActiveMDIGroup>0</ActiveMDIGroup>
     <MDIGroup>
       <Size>100</Size>
-      <ActiveTab>5</ActiveTab>
+      <ActiveTab>0</ActiveTab>
       <Documents>
         <Doc>
           <Name>.\main.c</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>185</TopLine>
-          <CurrentLine>201</CurrentLine>
+          <ColumnNumber>19</ColumnNumber>
+          <TopLine>1</TopLine>
+          <CurrentLine>4</CurrentLine>
         </Doc>
         <Doc>
           <Name>.\rf_config.c</Name>
@@ -1684,9 +1684,9 @@
         </Doc>
         <Doc>
           <Name>.\rf_route.c</Name>
-          <ColumnNumber>76</ColumnNumber>
-          <TopLine>326</TopLine>
-          <CurrentLine>352</CurrentLine>
+          <ColumnNumber>0</ColumnNumber>
+          <TopLine>263</TopLine>
+          <CurrentLine>357</CurrentLine>
         </Doc>
         <Doc>
           <Name>C:\Users\王之栋\Documents\Gitproject\capinfo-rf_route\RF_ROUTE.H</Name>

@@ -1,7 +1,7 @@
 // Project：capinfo-rf_route
 // Filename:	mcu_config.c
 // Function:	rf底层驱动
-// Author:		wzd
+// Author:		wzd wzd
 // Date:			2013年8月15日10:21:25
 
 
